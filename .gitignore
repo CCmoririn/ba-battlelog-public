@@ -1,0 +1,30 @@
+# Python関連
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# 環境設定関連
+.env
+*.env
+*.DS_Store
+*.vscode/
+.idea/
+
+# ログファイル
+*.log
+*.gz
+*.out
+
+# キャッシュファイル
+.cache/
+*.egg-info/
+
+# Google Cloud認証情報
+credentials.json
+
+# アップロードされたファイル
+uploads/
+
+# Python仮想環境
+venv/
