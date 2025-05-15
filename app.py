@@ -13,6 +13,11 @@ app = Flask(__name__)
 UPLOAD_FOLDER = os.path.join(os.getcwd(), "uploads")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
+# Health check 用エンドポイント（Render のヘルスチェック設定に対応）
+@app.route("/healthz")
+def health_check():
+    return "OK", 200
+
 def get_template_urls():
     """
     テンプレート画像のURLを返します。
@@ -70,8 +75,8 @@ def preprocess_image(image_path):
         raise Exception("画像が読み込めませんでした。")
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     blurred = cv2.GaussianBlur(gray, (5, 5), 0)
-    ret, thresh = cv2.threshold(blurred, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-    contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    ret, thresh_img = cv2.threshold(blurred, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    contours, _ = cv2.findContours(thresh_img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     if not contours:
         cropped = img
     else:
@@ -380,11 +385,9 @@ def confirm():
         return render_template_string(RESULT_PAGE_HTML, message=f"スプレッドシートの更新に失敗しました: {str(e)}")
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)
+    # Render 環境では環境変数 PORT に指定されたポートを使用します。
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
 
-import os
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
 
 
