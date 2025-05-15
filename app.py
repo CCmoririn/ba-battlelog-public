@@ -1,4 +1,20 @@
 import os
+
+# Render 上で Google Cloud の認証情報が環境変数に設定されている場合
+if "credentials" in os.environ:
+    # 一時的なファイルパスを指定（/tmp は Linux の一般的な一時フォルダ）
+    credentials_path = "/tmp/google_credentials.json"
+    # 環境変数から認証情報の内容を取得
+    credentials_content = os.environ["credentials"]
+    # 内容を一時ファイルに書き出す
+    with open(credentials_path, "w") as cred_file:
+        cred_file.write(credentials_content)
+    # Google クライアントライブラリが参照する環境変数にパスを設定
+    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = credentials_path
+    print("Google Application Default Credentials have been set.")
+else:
+    print("credentials not found in environment variables.")
+
 import cv2
 import datetime
 import numpy as np
