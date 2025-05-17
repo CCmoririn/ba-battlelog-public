@@ -29,3 +29,5 @@ uploads/
 # Python 仮想環境フォルダを無視する
 venv/
 .venv/
+
+shirasu_credentials.json
