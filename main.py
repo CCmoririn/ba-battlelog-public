@@ -257,5 +257,8 @@ def main():
     row_data = process_image(image_path)
     print("スプレッドシートを更新しました:", row_data)
 
+　　# ここでしらす式変換を即時実行
+    subprocess.run(["python", "call_gas.py"])
+
 if __name__ == "__main__":
     main()
