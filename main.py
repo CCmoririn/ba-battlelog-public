@@ -1,9 +1,15 @@
 import os
 import cv2
+import pytz
 import datetime
 import numpy as np
 import requests  # URLからの画像ダウンロード用
 # 必要に応じてGoogle Sheets API用のライブラリ（例：gspread）をインポートしてください
+
+# 日本時間 (JST) を定義
+JST = datetime.timezone(datetime.timedelta(hours=9))
+now = datetime.datetime.now(JST)
+
 from ocr_processing import perform_google_vision_ocr
 from spreadsheet_manager import update_spreadsheet
 
@@ -231,7 +237,7 @@ def process_image(image_path):
         attack_chars = right_chars
         defense_chars = left_chars
     
-    date_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    date_str = datetime.datetime.now(JST).strftime("%Y-%m-%d %H:%M:%S")
     # 攻撃側情報（9列分：日付、攻撃側プレイヤー、勝敗、6キャラ）＋空白1列を挟み、次に防衛側情報
     # これにより、防衛側情報がK列（11列目）から始まります。
     row_data = (
