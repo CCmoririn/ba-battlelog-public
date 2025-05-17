@@ -22,6 +22,10 @@ import requests  # URLから画像ダウンロード用
 import unicodedata  # Unicode正規化用
 from flask import Flask, request, render_template_string
 # 必要に応じてGoogle Sheets API用のライブラリ（例：gspread）をインポートしてください
+
+JST = datetime.timezone(datetime.timedelta(hours=9))
+now = datetime.datetime.now(JST)
+
 from ocr_processing import perform_google_vision_ocr
 from spreadsheet_manager import update_spreadsheet
 
@@ -259,7 +263,7 @@ def process_image(image_path):
         attack_chars = right_chars
         defense_chars = left_chars
     
-    date_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    date_str = datetime.datetime.now(JST).strftime("%Y-%m-%d %H:%M:%S")
     row_data = (
         [date_str, attack_side_player, attack_side_result] +
         attack_chars +
