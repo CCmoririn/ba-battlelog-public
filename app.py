@@ -5,6 +5,7 @@ import numpy as np
 import requests  # URLから画像ダウンロード用
 import unicodedata  # Unicode正規化用
 import subprocess
+from main import process_image
 from flask import Flask, request, render_template_string
 
 app = Flask(__name__)
