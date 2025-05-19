@@ -1,6 +1,5 @@
 import os
 import cv2
-import pytz
 import datetime
 import numpy as np
 import requests  # URLからの画像ダウンロード用
