@@ -48,8 +48,8 @@ CONFIRM_FORM_HTML = '''
   <body>
     <h1>認識結果を確認・編集してください</h1>
     <form method="post" action="/confirm">
-      {% for idx, label in enumerate(labels) %}
-        <label>{{ label }}: <input type="text" name="field{{ idx }}" value="{{ row_data[idx] }}"></label><br>
+      {% for label in labels %}
+        <label>{{ label }}: <input type="text" name="field{{ loop.index0 }}" value="{{ row_data[loop.index0] }}"></label><br>
       {% endfor %}
       <button type="submit">確定</button>
     </form>
