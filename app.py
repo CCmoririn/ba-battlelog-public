@@ -7,26 +7,22 @@ import unicodedata  # Unicode正規化用
 import subprocess
 from flask import Flask, request, render_template_string
 from main import process_image
-from spreadsheet_manager import update_spreadsheet  # 追加: スプレッドシート更新用インポート
+from spreadsheet_manager import update_spreadsheet
 
 app = Flask(__name__)
 
-# Render 上で Google Cloud の認証情報が環境変数に設定されている場合
+# Render環境でのGoogle認証情報設定
 if "credentials" in os.environ:
-    # 一時的なファイルパスを指定（/tmp は Linux の一般的な一時フォルダ）
     credentials_path = "/tmp/google_credentials.json"
-    # 環境変数から認証情報の内容を取得
     credentials_content = os.environ["credentials"]
-    # 内容を一時ファイルに書き出す
     with open(credentials_path, "w") as cred_file:
         cred_file.write(credentials_content)
-    # Google クライアントライブラリが参照する環境変数にパスを設定
     os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = credentials_path
     print("Google Application Default Credentials have been set.")
 else:
     print("credentials not found in environment variables.")
 
-# HTMLテンプレート：アップロードフォーム
+# アップロードフォーム
 UPLOAD_FORM_HTML = '''
 <!doctype html>
 <html>
@@ -41,7 +37,7 @@ UPLOAD_FORM_HTML = '''
 </html>
 '''
 
-# HTMLテンプレート：確認フォーム
+# 確認フォーム（Jinja loop.index0 を使用）
 CONFIRM_FORM_HTML = '''
 <!doctype html>
 <html>
@@ -58,7 +54,7 @@ CONFIRM_FORM_HTML = '''
 </html>
 '''
 
-# HTMLテンプレート：結果ページ
+# 結果ページ
 RESULT_PAGE_HTML = '''
 <!doctype html>
 <html>
@@ -76,46 +72,76 @@ def health_check():
 
 @app.route("/", methods=["GET", "POST"])
 def index():
-    if request.method == "POST":
-        if "image_file" not in request.files:
-            return "画像ファイルが選択されていません。", 400
-        file = request.files["image_file"]
-        if file.filename == "":
-            return "画像ファイルが選択されていません。", 400
-        # アップロードフォルダに保存
-        uploads_dir = os.path.abspath("uploads")
-        os.makedirs(uploads_dir, exist_ok=True)
-        file_path = os.path.join(uploads_dir, file.filename)
-        file.save(file_path)
-        try:
-            # 画像処理＆OCR
-            row_data = process_image(file_path)
-            return render_template_string(UPLOAD_FORM_HTML)
-        except Exception as e:
-            return render_template_string(RESULT_PAGE_HTML, message=f"エラーが発生しました: {str(e)}")
-
-    else:
+    if request.method == "GET":
+        # アップロードフォームを表示
         return render_template_string(UPLOAD_FORM_HTML)
+
+    # POST：画像受け取り
+    if "image_file" not in request.files:
+        return "画像ファイルが選択されていません。", 400
+    file = request.files["image_file"]
+    if file.filename == "":
+        return "画像ファイルが選択されていません。", 400
+
+    # ファイル保存
+    uploads_dir = os.path.abspath("uploads")
+    os.makedirs(uploads_dir, exist_ok=True)
+    file_path = os.path.join(uploads_dir, file.filename)
+    file.save(file_path)
+
+    try:
+        # OCR＋前処理
+        row_data = process_image(file_path)
+
+        # 確認フォーム用ラベル
+        labels = [
+            "日付", "攻撃側プレイヤー", "攻撃結果",
+            "攻撃キャラ1", "攻撃キャラ2", "攻撃キャラ3",
+            "攻撃キャラ4", "攻撃キャラ5", "攻撃キャラ6",
+            "（空白）", "防衛側プレイヤー", "防衛結果",
+            "防衛キャラ1", "防衛キャラ2", "防衛キャラ3",
+            "防衛キャラ4", "防衛キャラ5", "防衛キャラ6"
+        ]
+
+        # 確認フォームを表示
+        return render_template_string(
+            CONFIRM_FORM_HTML,
+            row_data=row_data,
+            labels=labels
+        )
+    except Exception as e:
+        return render_template_string(
+            RESULT_PAGE_HTML,
+            message=f"エラーが発生しました: {str(e)}"
+        )
 
 @app.route("/confirm", methods=["POST"])
 def confirm():
     try:
-        # フォームで送信された各フィールドの値を取得し、元のrow_dataリストに再構築
+        # 確認フォームの値を取得
         row_data = []
         for i in range(18):
             field_value = request.form.get(f"field{i}", "")
             row_data.append(field_value)
-        # Unicode 正規化で全角文字を半角に変換
-        row_data = [unicodedata.normalize('NFKC', field) for field in row_data]
-        # スプレッドシートを更新
+
+        # 全角→半角正規化
+        row_data = [unicodedata.normalize("NFKC", v) for v in row_data]
+
+        # スプレッドシート更新
         update_spreadsheet(row_data)
         # しらす式変換を即時実行
         subprocess.run(["python", "call_gas.py"], check=True)
-        return render_template_string(RESULT_PAGE_HTML, message="スプレッドシートの更新に成功しました！")
+
+        return render_template_string(
+            RESULT_PAGE_HTML,
+            message="スプレッドシートの更新に成功しました！"
+        )
     except Exception as e:
-        return render_template_string(RESULT_PAGE_HTML, message=f"スプレッドシートの更新に失敗しました: {str(e)}")
+        return render_template_string(
+            RESULT_PAGE_HTML,
+            message=f"スプレッドシートの更新に失敗しました: {str(e)}"
+        )
 
 if __name__ == "__main__":
-    # Render環境ではPORT環境変数を使って起動
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
