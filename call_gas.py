@@ -1,43 +1,45 @@
 import os
 import json
-from google_auth_oauthlib.flow import InstalledAppFlow
 import requests
+from google.oauth2.service_account import Credentials
+from google.auth.transport.requests import Request
 
-# スコープを定義（警告に合わせて "openid" を追加）
-SCOPES = ['https://www.googleapis.com/auth/userinfo.email', 'openid']
-
-# 環境変数から認証情報（OAuth クライアントID JSON文字列）を取得
-credentials_content = os.environ.get("GOOGLE_CREDENTIALS")
+# 環境変数 'credentials' にサービスアカウントキー JSON 全文を設定している前提
+credentials_content = os.environ.get("credentials")
 if not credentials_content:
-    raise Exception("Environment variable 'GOOGLE_CREDENTIALS' is not set or empty.")
+    raise Exception("Environment variable 'credentials' is not set or empty.")
 
-# 一時ファイルパスを設定し、JSONを書き出し
-credentials_path = "/tmp/shirasu_credentials.json"
+# 一時ファイルに書き出し
+credentials_path = "/tmp/google_credentials.json"
 with open(credentials_path, "w") as f:
     f.write(credentials_content)
 
-# OAuth2 のフローを実行
-flow = InstalledAppFlow.from_client_secrets_file(credentials_path, SCOPES)
-creds = flow.run_local_server(port=0)
+# サービスアカウント認証情報の生成
+SCOPES = ['https://www.googleapis.com/auth/script.external_request']
+creds = Credentials.from_service_account_file(credentials_path, scopes=SCOPES)
 
-# アクセストークン取得
+# トークンを更新（必要な場合）
+if not creds.valid or creds.expired:
+    creds.refresh(Request())
 access_token = creds.token
 
-# GASウェブアプリのエンドポイントURL
-url = 'https://script.google.com/macros/s/AKfycby6jamSogeLKTtla3A90hnweRLyRc-E3XryNXeA07nVsJAQy2Dj1pRNfce6WaSm2dwb/exec'
+# Apps Script WebアプリのエンドポイントURL
+script_url = 'https://script.google.com/macros/s/AKfycby6jamSogeLKTtla3A90hnweRLyRc-E3XryNXeA07nVsJAQy2Dj1pRNfce6WaSm2dwb/exec'
 
-# GETリクエスト送信時のヘッダー
-headers = {
-    'Authorization': f'Bearer {access_token}',
-    # 必要であれば 'Content-Type': 'application/json' などを追加してください
+# 実行する関数名などをペイロードに設定
+payload = {
+    'function': 'main',
+    # 必要なパラメータがあればここに追加
 }
 
-response = requests.get(url, headers=headers)
+headers = {
+    'Authorization': f'Bearer {access_token}',
+    'Content-Type': 'application/json',
+}
 
-# 応答結果を表示
-print("Response status:", response.status_code)
-print("Response text:", response.text)
+# Apps Script 実行
+response = requests.post(script_url, headers=headers, json=payload)
+if response.status_code != 200:
+    raise Exception(f"Error calling Apps Script: {response.status_code} {response.text}")
 
-# 一時ファイルの削除
-os.remove(credentials_path)
-
+print("Apps Script 実行結果：", response.text)
