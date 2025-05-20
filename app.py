@@ -5,8 +5,9 @@ import numpy as np
 import requests  # URLから画像ダウンロード用
 import unicodedata  # Unicode正規化用
 import subprocess
-from main import process_image
 from flask import Flask, request, render_template_string
+from main import process_image
+from spreadsheet_manager import update_spreadsheet  # 追加: スプレッドシート更新用インポート
 
 app = Flask(__name__)
 
@@ -89,22 +90,10 @@ def index():
         try:
             # 画像処理＆OCR
             row_data = process_image(file_path)
-            # 確認用フォームに渡すラベル定義
-            labels = [
-                "日付", "攻撃側プレイヤー", "攻撃結果",
-                "攻撃キャラ1", "攻撃キャラ2", "攻撃キャラ3",
-                "攻撃キャラ4", "攻撃キャラ5", "攻撃キャラ6",
-                "（空白）", "防衛側プレイヤー", "防衛結果",
-                "防衛キャラ1", "防衛キャラ2", "防衛キャラ3",
-                "防衛キャラ4", "防衛キャラ5", "防衛キャラ6"
-            ]
-            return render_template_string(
-                CONFIRM_FORM_HTML,
-                row_data=row_data,
-                labels=labels
-            )
+            return render_template_string(UPLOAD_FORM_HTML)
         except Exception as e:
             return render_template_string(RESULT_PAGE_HTML, message=f"エラーが発生しました: {str(e)}")
+
     else:
         return render_template_string(UPLOAD_FORM_HTML)
 
