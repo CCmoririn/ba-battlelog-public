@@ -1,11 +1,13 @@
 import os
+import sys
 import cv2
 import datetime
 import numpy as np
-import requests  # URLから画像ダウンロード用
-import unicodedata  # Unicode正規化用
+import requests        # URLから画像ダウンロード用
+import unicodedata    # Unicode正規化用
 import subprocess
 from flask import Flask, request, render_template_string
+
 from main import process_image
 from spreadsheet_manager import update_spreadsheet
 
@@ -129,8 +131,21 @@ def confirm():
 
         # スプレッドシート更新
         update_spreadsheet(row_data)
-        # しらす式変換を即時実行
-        subprocess.run(["python", "call_gas.py"], check=True)
+
+        # しらす式変換を即時実行（同じ interpreter を使い stderr をキャプチャ）
+        try:
+            subprocess.run(
+                [sys.executable, "call_gas.py"],
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True
+            )
+        except subprocess.CalledProcessError as e:
+            return render_template_string(
+                RESULT_PAGE_HTML,
+                message=f"しらす式変換が失敗しました:\n{e.stderr}"
+            )
 
         return render_template_string(
             RESULT_PAGE_HTML,
