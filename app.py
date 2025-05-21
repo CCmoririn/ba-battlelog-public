@@ -2,7 +2,7 @@ import os
 import sys
 import unicodedata
 import subprocess
-from flask import Flask, request, render_template_string
+from flask import Flask, request, render_template, render_template_string
 from main import process_image, call_apps_script
 from spreadsheet_manager import update_spreadsheet
 
@@ -69,7 +69,7 @@ RESULT_PAGE_HTML = '''
 def index():
     if request.method == "GET":
         # 画像アップロードフォームを表示
-        return render_template_string(UPLOAD_FORM_HTML)
+        return render_template("index.html")
 
     # POST：ファイル受け取り→OCRのみ
     file = request.files.get("image_file")

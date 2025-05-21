@@ -1,0 +1,39 @@
+/* 背景画像：初期は空、JavaScriptで動的に設定される */
+/* 画像は ui_prototype/background_img/ フォルダに保存してください */
+body {
+  font-family: "Segoe UI", sans-serif;
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* 暗いレイヤー：文字を見やすくする */
+.background-overlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  background-color: rgba(0, 0, 0, 0.4);  /* 数字を上げると暗くなります（例: 0.6） */
+  z-index: 0;
+}
+
+/* 中央のカードボックス */
+.card {
+  max-width: 600px;
+  margin: 0 auto;
+  background-color: rgba(255, 255, 255, 0.9);
+}
+
+/* プレビュー画像 */
+#preview-section img {
+  border: 2px solid #ffffff;
+  border-radius: 8px;
+  max-width: 100%;
+}
+
+/* フッターのスタイル */
+footer {
+  margin-top: 60px;
+}
