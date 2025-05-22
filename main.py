@@ -61,7 +61,7 @@ def preprocess_image(image_path):
         raise Exception("画像が読み込めませんでした。")
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     blurred = cv2.GaussianBlur(gray, (5,5), 0)
-    _, thresh = cv2.threshold(blurred, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    _, thresh = cv2.threshold(blurred, 0, 255, cv2.THRESH_BINARY + cv2.OTSU)
     contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     if contours:
         x, y, w, h = cv2.boundingRect(max(contours, key=cv2.contourArea))
@@ -147,7 +147,7 @@ def process_image(image_path):
       2. OCR (ヘッダー部抽出)
       3. parse_ocr_text で左右名＆結果
       4. アイコンROI取得＋テンプレマッチ
-      5. キャラ領域OCR（左6＆右6）
+      5. キャラ領域OCR（攻撃側・防衛側を動的に割り当て）
       6. row_data組立て
     """
     img = preprocess_image(image_path)
@@ -166,30 +166,32 @@ def process_image(image_path):
     # アイコンROI
     roi = img[115:195, 35:115]
     cv2.imwrite("debug_icon_roi.jpg", roi)
-    attack_url,_ = get_template_urls()
+    attack_url, _ = get_template_urls()
     template = load_template(attack_url)
     left_sword = match_icon(roi, template, thresh=0.4)
     print("Left has sword:", left_sword)
 
-    # プレイヤー割当
-    if left_sword:
-        atk_name, atk_res = left_name, left_res
-        def_name, def_res = right_name, right_res
-    else:
-        atk_name, atk_res = right_name, right_res
-        def_name, def_res = left_name, left_res
-
-    # キャラ領域一覧
+    # キャラ領域座標
     left_regs = [(87,637,183,680),(186,637,280,680),(284,637,379,680),
                  (383,637,478,680),(481,637,576,680),(579,637,679,680)]
     right_regs= [(922,637,1017,680),(1020,637,1115,680),(1118,637,1213,680),
                  (1216,637,1311,680),(1314,637,1409,680),(1412,637,1512,680)]
-    left_chars  = [ocr_region(img,r) for r in left_regs]
-    right_chars = [ocr_region(img,r) for r in right_regs]
+
+    # プレイヤー・キャラ割当（攻撃側が左なら left_regsが攻撃キャラ、右なら逆）
+    if left_sword:
+        atk_name, atk_res = left_name, left_res
+        def_name, def_res = right_name, right_res
+        atk_chars  = [ocr_region(img, r) for r in left_regs]
+        def_chars  = [ocr_region(img, r) for r in right_regs]
+    else:
+        atk_name, atk_res = right_name, right_res
+        def_name, def_res = left_name, left_res
+        atk_chars  = [ocr_region(img, r) for r in right_regs]
+        def_chars  = [ocr_region(img, r) for r in left_regs]
 
     # 日付・結果行組立
     date_str = datetime.datetime.now(JST).strftime("%Y-%m-%d %H:%M:%S")
-    row = [date_str, atk_name, atk_res] + left_chars + [""] + [def_name, def_res] + right_chars
+    row = [date_str, atk_name, atk_res] + atk_chars + [""] + [def_name, def_res] + def_chars
     return row
 
 def call_apps_script():
@@ -239,3 +241,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
