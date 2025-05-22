@@ -8,9 +8,14 @@ from spreadsheet_manager import update_spreadsheet
 
 app = Flask(__name__)
 
-# Google サービスアカウント認証情報を環境変数からパスでセット
+# Google サービスアカウント認証情報を環境変数の内容から一時ファイルに書き出す
 if "credentials" in os.environ:
-    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.environ["credentials"]
+    credentials_content = os.environ["credentials"]
+    credentials_path = "/tmp/google_credentials.json"
+    os.makedirs("/tmp", exist_ok=True)
+    with open(credentials_path, "w") as f:
+        f.write(credentials_content)
+    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = credentials_path
     print("Google Application Default Credentials have been set.")
 else:
     print("credentials not found in environment variables.")
@@ -52,7 +57,7 @@ def index():
             labels=labels
         )
     except Exception as e:
-        print(f"render_template失敗: {e}")  # ★エラー内容をログ出力
+        print(f"render_template失敗: {e}")  # デバッグ用
         return render_template(
             "complete.html",
             message=f"エラーが発生しました: {e}"
