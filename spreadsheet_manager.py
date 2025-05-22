@@ -17,7 +17,7 @@ def update_spreadsheet(data):
     creds = Credentials.from_service_account_file(creds_path, scopes=SCOPES)
     client = gspread.authorize(creds)
 
-    SPREADSHEET_ID = "1YF4mz5kCL0VVXPNwmkq6pCppm5IR6V_5fZbVLh0Ne9M"
+    SPREADSHEET_ID = "1U3lnPymCu4o0VPQgW02ybkq6tGzz7UHYLmDlXmpl9_s"
     worksheet = client.open_by_key(SPREADSHEET_ID).worksheet("戦闘ログ")
 
     worksheet.insert_row(data, 3)
