@@ -52,6 +52,7 @@ def index():
             labels=labels
         )
     except Exception as e:
+        print(f"render_template失敗: {e}")  # ★エラー内容をログ出力
         return render_template(
             "complete.html",
             message=f"エラーが発生しました: {e}"
@@ -81,11 +82,13 @@ def confirm():
             message="アップロードが完了しました"
         )
     except subprocess.CalledProcessError as e:
+        print(f"しらす式変換エラー: {e}")
         return render_template(
             "complete.html",
             message=f"しらす式変換が失敗しました: {e}"
         )
     except Exception as e:
+        print(f"スプレッドシート更新エラー: {e}")
         return render_template(
             "complete.html",
             message=f"スプレッドシートの更新に失敗しました: {e}"
@@ -94,3 +97,4 @@ def confirm():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
