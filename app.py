@@ -2,12 +2,14 @@ import os
 import sys
 import unicodedata
 import subprocess
-from flask import Flask, request, render_template
+from flask import Flask, request, render_template, jsonify
 from main import process_image, call_apps_script
 from spreadsheet_manager import (
     update_spreadsheet,
     get_striker_list_from_sheet,
-    get_special_list_from_sheet
+    get_special_list_from_sheet,
+    search_battlelog_output_sheet,   # ←★ 追加
+    get_other_icon                  # ←★ アイコン取得も利用可能
 )
 
 app = Flask(__name__)
@@ -114,6 +116,61 @@ def search():
         striker_list = []
         special_list = []
     return render_template("db.html", striker_list=striker_list, special_list=special_list)
+
+# ★★★ ここから検索API新設 ★★★
+@app.route("/api/search", methods=["POST"])
+def api_search():
+    try:
+        data = request.json
+        if not data:
+            return jsonify({"error": "No data received"}), 400
+
+        side = data.get("side")         # "attack" または "defense"
+        characters = data.get("characters")  # 6キャラ名リスト
+
+        if side not in ["attack", "defense"] or not isinstance(characters, list) or len(characters) != 6:
+            return jsonify({"error": "Invalid parameters"}), 400
+
+        # スプレッドシートから検索
+        matched_rows = search_battlelog_output_sheet(characters, side)
+
+        # 結果を加工して返却（例：勝ち側・負け側・キャラ・プレイヤー名・種別アイコンURL付き）
+        response = []
+        for row in matched_rows:
+            if side == "attack":
+                # 攻撃側を指定した場合、勝った防衛側だけ出す
+                if row.get("防衛結果", "") != "Win":
+                    continue
+                response.append({
+                    "winner_type": "defense",
+                    "winner_icon": get_other_icon("防衛側"),
+                    "winner_player": row.get("防衛側プレイヤー", ""),
+                    "winner_characters": [row.get(f"防衛キャラ{i+1}", "") for i in range(6)],
+                    "loser_type": "attack",
+                    "loser_icon": get_other_icon("攻撃側"),
+                    "loser_player": row.get("攻撃側プレイヤー", ""),
+                    "loser_characters": [row.get(f"攻撃キャラ{i+1}", "") for i in range(6)],
+                    "date": row.get("日付", ""),
+                })
+            else:
+                # 防衛側を指定した場合、勝った攻撃側だけ出す
+                if row.get("攻撃結果", "") != "Win":
+                    continue
+                response.append({
+                    "winner_type": "attack",
+                    "winner_icon": get_other_icon("攻撃側"),
+                    "winner_player": row.get("攻撃側プレイヤー", ""),
+                    "winner_characters": [row.get(f"攻撃キャラ{i+1}", "") for i in range(6)],
+                    "loser_type": "defense",
+                    "loser_icon": get_other_icon("防衛側"),
+                    "loser_player": row.get("防衛側プレイヤー", ""),
+                    "loser_characters": [row.get(f"防衛キャラ{i+1}", "") for i in range(6)],
+                    "date": row.get("日付", ""),
+                })
+        return jsonify({"results": response})
+    except Exception as e:
+        print(f"/api/search エラー: {e}")
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
