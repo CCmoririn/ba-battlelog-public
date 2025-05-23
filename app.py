@@ -4,7 +4,7 @@ import unicodedata
 import subprocess
 from flask import Flask, request, render_template
 from main import process_image, call_apps_script
-from spreadsheet_manager import update_spreadsheet
+from spreadsheet_manager import update_spreadsheet, get_character_list_from_sheet  # ← ここを追記
 
 app = Flask(__name__)
 
@@ -99,24 +99,17 @@ def confirm():
             message=f"スプレッドシートの更新に失敗しました: {e}"
         )
 
-# ★★★ ここから編成検索ページ用ルート追加 ★★★
+# ★★★ ここから編成検索ページ用ルート（キャラアイコンをシートから取得するバージョン） ★★★
 @app.route("/search")
 def search():
-    # 仮のキャラリスト（db.htmlの下部スクリプトと同じ内容）
-    char_list = [
-        {"name": "シロコ", "image": "https://cdn.jsdelivr.net/gh/BestM-JP/buruaka_icon_samples/shiroko.png"},
-        {"name": "イオリ", "image": "https://cdn.jsdelivr.net/gh/BestM-JP/buruaka_icon_samples/iori.png"},
-        {"name": "ホシノ", "image": "https://cdn.jsdelivr.net/gh/BestM-JP/buruaka_icon_samples/hoshino.png"},
-        {"name": "ユウカ", "image": "https://cdn.jsdelivr.net/gh/BestM-JP/buruaka_icon_samples/yuuka.png"},
-        {"name": "ヒナ", "image": "https://cdn.jsdelivr.net/gh/BestM-JP/buruaka_icon_samples/hina.png"},
-        {"name": "アル", "image": "https://cdn.jsdelivr.net/gh/BestM-JP/buruaka_icon_samples/aru.png"},
-        {"name": "カリン", "image": "https://cdn.jsdelivr.net/gh/BestM-JP/buruaka_icon_samples/karin.png"},
-        {"name": "ヒフミ", "image": "https://cdn.jsdelivr.net/gh/BestM-JP/buruaka_icon_samples/hifumi.png"},
-        {"name": "ムツキ", "image": "https://cdn.jsdelivr.net/gh/BestM-JP/buruaka_icon_samples/mutsuki.png"},
-        {"name": "ノノミ", "image": "https://cdn.jsdelivr.net/gh/BestM-JP/buruaka_icon_samples/nonomi.png"},
-    ]
+    try:
+        char_list = get_character_list_from_sheet()
+    except Exception as e:
+        print(f"キャラリスト取得エラー: {e}")
+        char_list = []
     return render_template("db.html", char_list=char_list)
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+

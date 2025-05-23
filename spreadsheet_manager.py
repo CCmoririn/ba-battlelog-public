@@ -23,3 +23,28 @@ def update_spreadsheet(data):
     worksheet.insert_row(data, 3)
     print("スプレッドシートを更新しました:", data)
 
+def get_character_list_from_sheet():
+    """
+    スプレッドシート「キャラデータ管理」シートからキャラ名とアイコンURLだけを取得してリスト化
+    """
+    SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
+    creds_path = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
+    if not creds_path:
+        raise Exception("GOOGLE_APPLICATION_CREDENTIALS environment variable is not set.")
+
+    creds = Credentials.from_service_account_file(creds_path, scopes=SCOPES)
+    client = gspread.authorize(creds)
+
+    # ご主人のキャラデータ管理シートID
+    SPREADSHEET_ID = "1rDQbwsNtNVaSmX04tZaf7AOX0AnPNhKSee1wv4myVTQ"
+    worksheet = client.open_by_key(SPREADSHEET_ID).worksheet("キャラデータ管理")
+
+    # 全行を辞書型で取得
+    records = worksheet.get_all_records()
+    char_list = []
+    for row in records:
+        name = row.get("キャラ名")
+        icon_url = row.get("アイコン")
+        if name and icon_url:
+            char_list.append({"name": name, "image": icon_url})
+    return char_list
