@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>ブルアカ対抗戦DBサンプルUI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background: linear-gradient(135deg, #e4f2fd 0%, #f7fafd 100%);
+      min-height: 100vh;
+      font-family: "Segoe UI", "ヒラギノ角ゴ ProN", "Meiryo", sans-serif;
+    }
+    .main-card {
+      max-width: 900px;
+      margin: 40px auto;
+      border-radius: 18px;
+      background: #fff;
+      box-shadow: 0 8px 32px rgba(50,80,160,0.09);
+      padding: 36px 40px 30px 40px;
+    }
+    .section-title {
+      font-size: 1.35rem;
+      font-weight: bold;
+      color: #4a82c3;
+      margin-bottom: 18px;
+      letter-spacing: 0.08em;
+    }
+    .tab-group {
+      display: flex; gap: 16px; margin-bottom: 16px;
+    }
+    .tab-btn {
+      border: none; border-radius: 999px;
+      padding: 8px 32px; font-weight: bold; font-size: 1.1em;
+      background: #e8f2ff; color: #338eda;
+      transition: background .15s, color .15s;
+      box-shadow: 0 2px 8px rgba(80,130,200,0.06);
+      cursor: pointer;
+    }
+    .tab-btn.active {
+      background: #338eda;
+      color: #fff;
+    }
+    .select-season {
+      max-width: 200px; margin-bottom: 24px;
+    }
+    .defense-row {
+      display: flex; gap: 14px; margin-bottom: 18px;
+      justify-content: center;
+    }
+    .def-slot {
+      width: 92px; height: 92px;
+      background: #bed1e6;
+      border-radius: 16px;
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-size: 1.35em;
+      font-weight: bold;
+      cursor: pointer;
+      position: relative;
+      box-shadow: 0 2px 8px rgba(80,130,200,0.07);
+      transition: box-shadow .13s;
+      border: 2.3px solid #a7bad3;
+    }
+    .def-slot img {
+      width: 80px; height: 80px; border-radius: 12px;
+      object-fit: cover;
+      box-shadow: 0 0 8px #80b0e980;
+    }
+    .def-slot .remove-icon {
+      position: absolute;
+      top: 4px; right: 8px;
+      background: #fff; color: #ea5555; border-radius: 50%; width: 22px; height: 22px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: bold; font-size: 1.1em; cursor: pointer; box-shadow: 0 1px 6px #8882;
+      border: none;
+    }
+    .search-btn {
+      background: linear-gradient(90deg, #5ad5e9, #3c8fd8 90%);
+      color: #fff; border: none; border-radius: 12px; padding: 10px 38px; font-size: 1.25em;
+      font-weight: bold; box-shadow: 0 2px 12px #83cbf822;
+      margin-top: 8px; margin-bottom: 8px;
+      transition: background .16s;
+    }
+    .search-btn:hover { background: #3499e5; }
+    .ad-placeholder {
+      margin: 34px 0 0 0;
+      padding: 24px;
+      border: 2px dashed #bed1e6;
+      background: #f8fafc;
+      color: #b3b9be;
+      border-radius: 16px;
+      text-align: center;
+      font-size: 1.08em;
+    }
+    /* モーダル */
+    .modal-bg {
+      display: none; position: fixed; left:0; top:0; width:100vw; height:100vh; background:rgba(0,38,80,0.25); z-index: 1001;
+      align-items: center; justify-content: center;
+    }
+    .modal-bg.active { display: flex; }
+    .char-modal {
+      background: #fff;
+      border-radius: 16px;
+      max-width: 650px; width: 97vw;
+      padding: 22px 24px 14px 24px;
+      box-shadow: 0 4px 28px #2640832a;
+      animation: modalpop .22s;
+      min-height: 320px;
+      position: relative;
+    }
+    @keyframes modalpop {
+      0% { transform: scale(0.98); opacity:0; }
+      100% { transform: scale(1); opacity:1; }
+    }
+    .modal-title {
+      font-weight: bold; color: #338eda; margin-bottom: 10px;
+      font-size: 1.16em;
+      text-align: left;
+    }
+    .modal-search {
+      width: 100%; margin-bottom: 10px;
+      font-size: 1.08em; padding: 6px 10px; border-radius: 7px; border:1.5px solid #c9d3e2;
+    }
+    .char-list-grid {
+      display: flex; flex-wrap: wrap; gap: 8px;
+      max-height: 320px; overflow-y: auto; margin-bottom: 10px;
+    }
+    .char-item {
+      width: 54px; height: 54px; border-radius: 8px; border: 2px solid #bed1e6;
+      background: #e8f0fa; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: border .11s;
+      position: relative;
+    }
+    .char-item.selected {
+      border: 2.7px solid #ffcf32;
+      box-shadow: 0 0 8px #ffe68080;
+    }
+    .char-item img {
+      width: 44px; height: 44px; border-radius: 6px; object-fit: cover;
+    }
+    .char-label {
+      position: absolute; bottom: -18px; left: 50%; transform: translateX(-50%);
+      font-size: 0.88em; color: #3d678d;
+      background: #f8fafd; border-radius: 4px; padding: 0 2px;
+      white-space: nowrap;
+    }
+    .modal-actions {
+      display: flex; gap: 14px; justify-content: flex-end; margin-top: 2px;
+    }
+    .modal-btn {
+      background: #e8f2ff; color: #338eda; border: none; border-radius: 9px;
+      font-weight: bold; padding: 7px 20px; font-size: 1.06em;
+      transition: background .13s, color .13s;
+      margin-top: 4px;
+    }
+    .modal-btn.ok { background: #338eda; color: #fff; }
+    .modal-btn.clear { color: #ea5555; border: 1.5px solid #ea5555; background: #fff; }
+    @media (max-width: 768px) {
+      .main-card { padding: 14px 3vw 20px 3vw; }
+      .defense-row { gap: 5px;}
+      .def-slot { width: 66px; height: 66px; }
+      .def-slot img { width: 54px; height: 54px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="main-card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+      <div class="section-title">対抗戦 編成検索</div>
+      <select class="form-select select-season" id="seasonSelect">
+        <option>2024年 春シーズン</option>
+        <option>2024年 夏シーズン</option>
+        <option>2023年 冬シーズン</option>
+      </select>
+    </div>
+    <div class="tab-group">
+      <button class="tab-btn active" id="atkTab">攻撃側</button>
+      <button class="tab-btn" id="defTab">防衛側</button>
+    </div>
+    <div style="margin-bottom:8px; color:#8ca3bf; font-size:1em; text-align:right;">
+      ※ログイン/勝率順/登録者指定は限定公開版のみ対応予定
+    </div>
+    <div style="background:#f6f9fb;border-radius:14px;padding:24px 18px;margin-bottom:8px; border:1.5px solid #d7e5f3;">
+      <div style="font-weight:bold;color:#338eda; margin-bottom:6px;">{{atkOrDef}}編成</div>
+      <div class="defense-row" id="defenseRow">
+        <!-- 6枠 -->
+      </div>
+      <button class="search-btn">検索</button>
+    </div>
+    <div class="ad-placeholder">ここに広告が表示されます（仮）</div>
+  </div>
+
+  <!-- キャラ選択モーダル -->
+  <div class="modal-bg" id="modalBg">
+    <div class="char-modal">
+      <div class="modal-title">キャラを選択（{{currSlot+1}}枠目）</div>
+      <input class="modal-search" id="modalSearch" placeholder="キャラ名で絞り込み">
+      <div class="char-list-grid" id="charListGrid"></div>
+      <div class="modal-actions">
+        <button class="modal-btn clear" id="modalClear">空に戻す</button>
+        <button class="modal-btn" id="modalCancel">キャンセル</button>
+        <button class="modal-btn ok" id="modalOk">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ▼ サーバーから受け取ったキャラリスト
+    const charList = {{ char_list | tojson }};
+
+    let atkOrDef = "防衛"; // 攻撃/防衛表示切替
+    let defenseTeam = [null, null, null, null, null, null]; // 6枠
+    let currSlot = null; // 現在編集中の枠
+
+    // 6枠の描画
+    function renderDefenseRow() {
+      const row = document.getElementById("defenseRow");
+      row.innerHTML = "";
+      defenseTeam.forEach((ch, idx) => {
+        const slot = document.createElement("div");
+        slot.className = "def-slot";
+        slot.onclick = () => openModal(idx);
+        if (ch) {
+          slot.innerHTML = `<img src="${ch.image}" alt="${ch.name}"><button class="remove-icon" onclick="removeChar(event,${idx})">&times;</button>`;
+        } else {
+          slot.innerHTML = `<span style="opacity:0.6;">EMPTY</span>`;
+        }
+        row.appendChild(slot);
+      });
+    }
+    window.removeChar = function(e, idx) {
+      e.stopPropagation();
+      defenseTeam[idx] = null;
+      renderDefenseRow();
+    }
+
+    // 攻撃/防衛切り替え
+    document.getElementById("atkTab").onclick = () => {
+      atkOrDef = "攻撃";
+      document.getElementById("atkTab").classList.add("active");
+      document.getElementById("defTab").classList.remove("active");
+      document.querySelector('.section-title').innerText = "対抗戦 編成検索";
+      renderDefenseRow();
+    };
+    document.getElementById("defTab").onclick = () => {
+      atkOrDef = "防衛";
+      document.getElementById("defTab").classList.add("active");
+      document.getElementById("atkTab").classList.remove("active");
+      document.querySelector('.section-title').innerText = "対抗戦 編成検索";
+      renderDefenseRow();
+    };
+
+    // モーダル
+    const modalBg = document.getElementById("modalBg");
+    let selectedChar = null;
+
+    function openModal(idx) {
+      currSlot = idx;
+      document.querySelector(".modal-title").innerText = `キャラを選択（${idx+1}枠目）`;
+      document.getElementById("modalSearch").value = "";
+      selectedChar = defenseTeam[idx];
+      renderCharList();
+      modalBg.classList.add("active");
+    }
+
+    function closeModal() {
+      modalBg.classList.remove("active");
+      selectedChar = null;
+    }
+
+    // キャラ一覧
+    function renderCharList() {
+      const grid = document.getElementById("charListGrid");
+      const filter = document.getElementById("modalSearch").value.trim();
+      grid.innerHTML = "";
+      charList
+        .filter(c => !defenseTeam.includes(c) || (selectedChar && selectedChar.name === c.name))
+        .filter(c => c.name.includes(filter))
+        .forEach(c => {
+          const div = document.createElement("div");
+          div.className = "char-item" + (selectedChar && selectedChar.name === c.name ? " selected" : "");
+          div.innerHTML = `<img src="${c.image}" alt="${c.name}"><div class="char-label">${c.name}</div>`;
+          div.onclick = () => {
+            selectedChar = c;
+            renderCharList();
+          };
+          grid.appendChild(div);
+        });
+    }
+
+    // モーダルイベント
+    document.getElementById("modalSearch").oninput = renderCharList;
+    document.getElementById("modalOk").onclick = () => {
+      defenseTeam[currSlot] = selectedChar;
+      closeModal();
+      renderDefenseRow();
+    };
+    document.getElementById("modalCancel").onclick = () => closeModal();
+    document.getElementById("modalClear").onclick = () => {
+      defenseTeam[currSlot] = null;
+      closeModal();
+      renderDefenseRow();
+    };
+
+    // 初期表示
+    renderDefenseRow();
+  </script>
+</body>
+</html>

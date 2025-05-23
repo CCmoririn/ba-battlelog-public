@@ -99,7 +99,24 @@ def confirm():
             message=f"スプレッドシートの更新に失敗しました: {e}"
         )
 
+# ★★★ ここから編成検索ページ用ルート追加 ★★★
+@app.route("/search")
+def search():
+    # 仮のキャラリスト（db.htmlの下部スクリプトと同じ内容）
+    char_list = [
+        {"name": "シロコ", "image": "https://cdn.jsdelivr.net/gh/BestM-JP/buruaka_icon_samples/shiroko.png"},
+        {"name": "イオリ", "image": "https://cdn.jsdelivr.net/gh/BestM-JP/buruaka_icon_samples/iori.png"},
+        {"name": "ホシノ", "image": "https://cdn.jsdelivr.net/gh/BestM-JP/buruaka_icon_samples/hoshino.png"},
+        {"name": "ユウカ", "image": "https://cdn.jsdelivr.net/gh/BestM-JP/buruaka_icon_samples/yuuka.png"},
+        {"name": "ヒナ", "image": "https://cdn.jsdelivr.net/gh/BestM-JP/buruaka_icon_samples/hina.png"},
+        {"name": "アル", "image": "https://cdn.jsdelivr.net/gh/BestM-JP/buruaka_icon_samples/aru.png"},
+        {"name": "カリン", "image": "https://cdn.jsdelivr.net/gh/BestM-JP/buruaka_icon_samples/karin.png"},
+        {"name": "ヒフミ", "image": "https://cdn.jsdelivr.net/gh/BestM-JP/buruaka_icon_samples/hifumi.png"},
+        {"name": "ムツキ", "image": "https://cdn.jsdelivr.net/gh/BestM-JP/buruaka_icon_samples/mutsuki.png"},
+        {"name": "ノノミ", "image": "https://cdn.jsdelivr.net/gh/BestM-JP/buruaka_icon_samples/nonomi.png"},
+    ]
+    return render_template("db.html", char_list=char_list)
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
-
