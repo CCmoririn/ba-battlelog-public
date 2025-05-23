@@ -99,9 +99,6 @@ def get_other_icon(key):
     """
     return _other_icon_cache.get(key, "")
 
-# アプリ起動時にキャッシュを1回だけロード
-load_other_icon_cache()
-
 def reload_other_icon_cache():
     """
     その他アイコンキャッシュを明示的に再読込
@@ -130,16 +127,10 @@ def search_battlelog_output_sheet(query, search_side):
 
     result = []
     for row in all_records:
-        # 検索側に応じて列名を決定（例: 攻撃なら「攻撃キャラ1」〜「攻撃キャラ6」、防衛なら「防衛キャラ1」〜「防衛キャラ6」）
         if search_side == "attack":
             char_cols = [f"攻撃キャラ{i+1}" for i in range(6)]
-            win_col = "攻撃結果"
-            player_col = "攻撃側プレイヤー"
         else:
             char_cols = [f"防衛キャラ{i+1}" for i in range(6)]
-            win_col = "防衛結果"
-            player_col = "防衛側プレイヤー"
-        # 完全一致チェック（空欄はワイルドカード扱い）
         match = True
         for idx, name in enumerate(query):
             target = row.get(char_cols[idx], "")
