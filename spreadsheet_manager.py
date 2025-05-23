@@ -90,8 +90,8 @@ def search_battlelog_output_sheet(query, search_side):
     creds = Credentials.from_service_account_file(creds_path, scopes=SCOPES)
     client = gspread.authorize(creds)
     worksheet = client.open_by_key(SPREADSHEET_ID).worksheet(SHEET_NAME)
-    # ★ここでhead=3を指定して3行目からデータ取得
-    all_records = worksheet.get_all_records(head=3)
+    # ★ここでhead=2を指定して2行目からデータ取得
+    all_records = worksheet.get_all_records(head=2)
     result = []
     for row in all_records:
         if search_side == "attack":
