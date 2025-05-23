@@ -191,7 +191,7 @@
       ※ログイン/勝率順/登録者指定は限定公開版のみ対応予定
     </div>
     <div style="background:#f6f9fb;border-radius:14px;padding:24px 18px;margin-bottom:8px; border:1.5px solid #d7e5f3;">
-      <div style="font-weight:bold;color:#338eda; margin-bottom:6px;">{{atkOrDef}}編成</div>
+      <div style="font-weight:bold;color:#338eda; margin-bottom:6px;">編成</div>
       <div class="defense-row-wrap">
         <div class="defense-row" id="defenseRow">
           <!-- 6枠 -->
@@ -211,7 +211,7 @@
   </div>
 
   <!-- キャラ選択モーダル -->
-  <div class="modal-bg" id="modalBg">
+  <div class="modal-bg" id="modalBg" style="display:none;">
     <div class="char-modal">
       <div class="modal-title" id="modalTitle">キャラを選択（1枠目）</div>
       <input class="modal-search" id="modalSearch" placeholder="キャラ名で絞り込み">
@@ -293,11 +293,11 @@
       document.getElementById("modalSearch").value = "";
       selectedChar = defenseTeam[idx];
       renderCharList();
-      modalBg.classList.add("active");
+      modalBg.style.display = "flex";
     }
 
     function closeModal() {
-      modalBg.classList.remove("active");
+      modalBg.style.display = "none";
       selectedChar = null;
     }
 
@@ -342,7 +342,7 @@
       renderDefenseRow();
     };
 
-    // --- ここから検索API連携 ---
+    // --- 検索API連携 ---
     document.getElementById("searchBtn").onclick = async () => {
       const charNames = defenseTeam.map(c => c ? c.name : "");
       if (charNames.filter(x => !!x).length === 0) {

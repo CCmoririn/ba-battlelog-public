@@ -79,7 +79,35 @@ def get_other_icon(key):
 def reload_other_icon_cache():
     load_other_icon_cache()
 
-# ========== 「出力結果」シートの完全一致検索（3行目以降のみ！） ==========
+# ========== 空欄・重複ヘッダーでも安全な取得関数 ==========
+def get_sheet_records_with_empty_safe(worksheet, head_row=2):
+    """
+    空セルが混じっている場合でも安全にデータ取得する
+    - head_row(例:2)をヘッダーとして、そのまま重複名/空白を自動リネーム
+    """
+    rows = worksheet.get_all_values()
+    headers = rows[head_row - 1]
+    seen = {}
+    uniq_headers = []
+    for h in headers:
+        base = h.strip() if h.strip() else "空欄"
+        count = seen.get(base, 0)
+        if count > 0:
+            uniq_headers.append(f"{base}_{count+1}")
+        else:
+            uniq_headers.append(base)
+        seen[base] = count + 1
+
+    data = []
+    for row in rows[head_row:]:
+        record = {}
+        for idx, val in enumerate(row):
+            if idx < len(uniq_headers):
+                record[uniq_headers[idx]] = val
+        data.append(record)
+    return data
+
+# ========== 「出力結果」シートの完全一致検索（空セル安全対応） ==========
 def search_battlelog_output_sheet(query, search_side):
     SPREADSHEET_ID = "1ix6hz4s0AinsepfSHNZ6CMAsNSRW-3l8nJUMBR2DpLQ"
     SHEET_NAME = "出力結果"
@@ -90,14 +118,18 @@ def search_battlelog_output_sheet(query, search_side):
     creds = Credentials.from_service_account_file(creds_path, scopes=SCOPES)
     client = gspread.authorize(creds)
     worksheet = client.open_by_key(SPREADSHEET_ID).worksheet(SHEET_NAME)
-    # ★ここでhead=2を指定して2行目からデータ取得
-    all_records = worksheet.get_all_records(head=2)
+
+    # ★空セル安全な取得
+    all_records = get_sheet_records_with_empty_safe(worksheet, head_row=2)
+
+    # キー名対応
+    if search_side == "attack":
+        char_cols = ["A1", "A2", "A3", "A4", "ASP1", "ASP2"]
+    else:
+        char_cols = ["D1", "D2", "D3", "D4", "DSP1", "DSP2"]
+
     result = []
     for row in all_records:
-        if search_side == "attack":
-            char_cols = [f"攻撃キャラ{i+1}" for i in range(1, 7)]
-        else:
-            char_cols = [f"防衛キャラ{i+1}" for i in range(1, 7)]
         match = True
         for idx, name in enumerate(query):
             target = row.get(char_cols[idx], "")
