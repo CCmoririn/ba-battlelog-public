@@ -60,6 +60,7 @@
       box-shadow: 0 2px 8px rgba(80,130,200,0.07);
       transition: box-shadow .13s;
       border: 2.3px solid #a7bad3;
+      flex-direction: column;
     }
     .def-slot img {
       width: 80px; height: 80px; border-radius: 12px;
@@ -73,6 +74,13 @@
       display: flex; align-items: center; justify-content: center;
       font-weight: bold; font-size: 1.1em; cursor: pointer; box-shadow: 0 1px 6px #8882;
       border: none;
+    }
+    .slot-label {
+      margin-top: 3px;
+      font-size: 0.98em;
+      font-weight: bold;
+      color: #337;
+      letter-spacing: 0.08em;
     }
     .search-btn {
       background: linear-gradient(90deg, #5ad5e9, #3c8fd8 90%);
@@ -138,12 +146,7 @@
     .char-item img {
       width: 44px; height: 44px; border-radius: 6px; object-fit: cover;
     }
-    .char-label {
-      position: absolute; bottom: -18px; left: 50%; transform: translateX(-50%);
-      font-size: 0.88em; color: #3d678d;
-      background: #f8fafd; border-radius: 4px; padding: 0 2px;
-      white-space: nowrap;
-    }
+    /* キャラ名ラベル削除 */
     .modal-actions {
       display: flex; gap: 14px; justify-content: flex-end; margin-top: 2px;
     }
@@ -193,7 +196,6 @@
   <!-- キャラ選択モーダル -->
   <div class="modal-bg" id="modalBg">
     <div class="char-modal">
-      <!-- ここを修正 -->
       <div class="modal-title" id="modalTitle">キャラを選択（1枠目）</div>
       <input class="modal-search" id="modalSearch" placeholder="キャラ名で絞り込み">
       <div class="char-list-grid" id="charListGrid"></div>
@@ -206,8 +208,12 @@
   </div>
 
   <script>
-    // ▼ サーバーから受け取ったキャラリスト
-    const charList = {{ char_list | tojson }};
+    // サーバーから受け取ったSTRIKER/SPECIALキャラリスト
+    const strikerList = {{ striker_list | tojson }};
+    const specialList = {{ special_list | tojson }};
+
+    const atkLabels = ["A1", "A2", "A3", "A4", "SP", "SP"];
+    const defLabels = ["D1", "D2", "D3", "D4", "SP", "SP"];
 
     let atkOrDef = "防衛"; // 攻撃/防衛表示切替
     let defenseTeam = [null, null, null, null, null, null]; // 6枠
@@ -217,15 +223,21 @@
     function renderDefenseRow() {
       const row = document.getElementById("defenseRow");
       row.innerHTML = "";
+      const slotLabels = atkOrDef === "攻撃" ? atkLabels : defLabels;
       defenseTeam.forEach((ch, idx) => {
         const slot = document.createElement("div");
         slot.className = "def-slot";
         slot.onclick = () => openModal(idx);
+        let innerHTML = "";
         if (ch) {
-          slot.innerHTML = `<img src="${ch.image}" alt="${ch.name}"><button class="remove-icon" onclick="removeChar(event,${idx})">&times;</button>`;
+          innerHTML += `<img src="${ch.image}" alt="${ch.name}">`;
+          innerHTML += `<button class="remove-icon" onclick="removeChar(event,${idx})">&times;</button>`;
         } else {
-          slot.innerHTML = `<span style="opacity:0.6;">EMPTY</span>`;
+          innerHTML += `<span style="opacity:0.6;">EMPTY</span>`;
         }
+        // ラベルを下部に追加
+        innerHTML += `<div class="slot-label">${slotLabels[idx]}</div>`;
+        slot.innerHTML = innerHTML;
         row.appendChild(slot);
       });
     }
@@ -257,7 +269,6 @@
 
     function openModal(idx) {
       currSlot = idx;
-      // ここでタイトルを書き換え
       document.getElementById("modalTitle").innerText = `キャラを選択（${idx+1}枠目）`;
       document.getElementById("modalSearch").value = "";
       selectedChar = defenseTeam[idx];
@@ -275,13 +286,20 @@
       const grid = document.getElementById("charListGrid");
       const filter = document.getElementById("modalSearch").value.trim();
       grid.innerHTML = "";
-      charList
+      // 4枠目までSTRIKER、5,6枠目はSPECIAL
+      let candidates;
+      if (currSlot <= 3) {
+        candidates = strikerList;
+      } else {
+        candidates = specialList;
+      }
+      candidates
         .filter(c => !defenseTeam.includes(c) || (selectedChar && selectedChar.name === c.name))
         .filter(c => c.name.includes(filter))
         .forEach(c => {
           const div = document.createElement("div");
           div.className = "char-item" + (selectedChar && selectedChar.name === c.name ? " selected" : "");
-          div.innerHTML = `<img src="${c.image}" alt="${c.name}"><div class="char-label">${c.name}</div>`;
+          div.innerHTML = `<img src="${c.image}" alt="${c.name}">`;
           div.onclick = () => {
             selectedChar = c;
             renderCharList();

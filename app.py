@@ -4,7 +4,11 @@ import unicodedata
 import subprocess
 from flask import Flask, request, render_template
 from main import process_image, call_apps_script
-from spreadsheet_manager import update_spreadsheet, get_character_list_from_sheet  # ← ここを追記
+from spreadsheet_manager import (
+    update_spreadsheet,
+    get_striker_list_from_sheet,
+    get_special_list_from_sheet
+)
 
 app = Flask(__name__)
 
@@ -99,17 +103,18 @@ def confirm():
             message=f"スプレッドシートの更新に失敗しました: {e}"
         )
 
-# ★★★ ここから編成検索ページ用ルート（キャラアイコンをシートから取得するバージョン） ★★★
+# ★★★ ここから編成検索ページ用ルート（STRIKER/SPECIAL対応） ★★★
 @app.route("/search")
 def search():
     try:
-        char_list = get_character_list_from_sheet()
+        striker_list = get_striker_list_from_sheet()
+        special_list = get_special_list_from_sheet()
     except Exception as e:
         print(f"キャラリスト取得エラー: {e}")
-        char_list = []
-    return render_template("db.html", char_list=char_list)
+        striker_list = []
+        special_list = []
+    return render_template("db.html", striker_list=striker_list, special_list=special_list)
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
-
