@@ -44,8 +44,11 @@
     .select-season {
       max-width: 200px; margin-bottom: 24px;
     }
+    .defense-row-wrap {
+      display: flex; flex-direction: column; align-items: center; margin-bottom: 18px;
+    }
     .defense-row {
-      display: flex; gap: 14px; margin-bottom: 18px;
+      display: flex; gap: 14px; margin-bottom: 0;
       justify-content: center;
     }
     .def-slot {
@@ -75,12 +78,23 @@
       font-weight: bold; font-size: 1.1em; cursor: pointer; box-shadow: 0 1px 6px #8882;
       border: none;
     }
+    .slot-label-row {
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+      margin-top: 6px;
+      margin-bottom: 2px;
+    }
     .slot-label {
-      margin-top: 3px;
+      width: 92px;
+      text-align: center;
       font-size: 0.98em;
       font-weight: bold;
       color: #337;
       letter-spacing: 0.08em;
+      /* 下だけ余白 */
+      padding-bottom: 2px;
+      user-select: none;
     }
     .search-btn {
       background: linear-gradient(90deg, #5ad5e9, #3c8fd8 90%);
@@ -160,9 +174,10 @@
     .modal-btn.clear { color: #ea5555; border: 1.5px solid #ea5555; background: #fff; }
     @media (max-width: 768px) {
       .main-card { padding: 14px 3vw 20px 3vw; }
-      .defense-row { gap: 5px;}
+      .defense-row, .slot-label-row { gap: 5px;}
       .def-slot { width: 66px; height: 66px; }
       .def-slot img { width: 54px; height: 54px; }
+      .slot-label { width: 66px; font-size: 0.87em;}
     }
   </style>
 </head>
@@ -185,8 +200,13 @@
     </div>
     <div style="background:#f6f9fb;border-radius:14px;padding:24px 18px;margin-bottom:8px; border:1.5px solid #d7e5f3;">
       <div style="font-weight:bold;color:#338eda; margin-bottom:6px;">{{atkOrDef}}編成</div>
-      <div class="defense-row" id="defenseRow">
-        <!-- 6枠 -->
+      <div class="defense-row-wrap">
+        <div class="defense-row" id="defenseRow">
+          <!-- 6枠 -->
+        </div>
+        <div class="slot-label-row" id="slotLabelRow">
+          <!-- 枠名ラベル -->
+        </div>
       </div>
       <button class="search-btn">検索</button>
     </div>
@@ -223,22 +243,27 @@
     function renderDefenseRow() {
       const row = document.getElementById("defenseRow");
       row.innerHTML = "";
-      const slotLabels = atkOrDef === "攻撃" ? atkLabels : defLabels;
       defenseTeam.forEach((ch, idx) => {
         const slot = document.createElement("div");
         slot.className = "def-slot";
         slot.onclick = () => openModal(idx);
-        let innerHTML = "";
         if (ch) {
-          innerHTML += `<img src="${ch.image}" alt="${ch.name}">`;
-          innerHTML += `<button class="remove-icon" onclick="removeChar(event,${idx})">&times;</button>`;
+          slot.innerHTML = `<img src="${ch.image}" alt="${ch.name}"><button class="remove-icon" onclick="removeChar(event,${idx})">&times;</button>`;
         } else {
-          innerHTML += `<span style="opacity:0.6;">EMPTY</span>`;
+          slot.innerHTML = `<span style="opacity:0.6;">EMPTY</span>`;
         }
-        // ラベルを下部に追加
-        innerHTML += `<div class="slot-label">${slotLabels[idx]}</div>`;
-        slot.innerHTML = innerHTML;
         row.appendChild(slot);
+      });
+
+      // ラベルを下行で別に表示
+      const labelRow = document.getElementById("slotLabelRow");
+      labelRow.innerHTML = "";
+      const slotLabels = atkOrDef === "攻撃" ? atkLabels : defLabels;
+      slotLabels.forEach(label => {
+        const div = document.createElement("div");
+        div.className = "slot-label";
+        div.textContent = label;
+        labelRow.appendChild(div);
       });
     }
     window.removeChar = function(e, idx) {
