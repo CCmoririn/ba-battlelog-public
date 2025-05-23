@@ -193,7 +193,8 @@
   <!-- キャラ選択モーダル -->
   <div class="modal-bg" id="modalBg">
     <div class="char-modal">
-      <div class="modal-title">キャラを選択（{{currSlot+1}}枠目）</div>
+      <!-- ここを修正 -->
+      <div class="modal-title" id="modalTitle">キャラを選択（1枠目）</div>
       <input class="modal-search" id="modalSearch" placeholder="キャラ名で絞り込み">
       <div class="char-list-grid" id="charListGrid"></div>
       <div class="modal-actions">
@@ -256,7 +257,8 @@
 
     function openModal(idx) {
       currSlot = idx;
-      document.querySelector(".modal-title").innerText = `キャラを選択（${idx+1}枠目）`;
+      // ここでタイトルを書き換え
+      document.getElementById("modalTitle").innerText = `キャラを選択（${idx+1}枠目）`;
       document.getElementById("modalSearch").value = "";
       selectedChar = defenseTeam[idx];
       renderCharList();
