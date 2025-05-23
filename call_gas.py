@@ -23,8 +23,8 @@ if not creds.valid or creds.expired:
     creds.refresh(Request())
 access_token = creds.token
 
-# Apps Script WebアプリのエンドポイントURL
-script_url = 'https://script.google.com/macros/s/AKfycby6jamSogeLKTtla3A90hnweRLyRc-E3XryNXeA07nVsJAQy2Dj1pRNfce6WaSm2dwb/exec'
+# Apps Script WebアプリのエンドポイントURL（一般公開用GASデプロイURLに変更済み）
+script_url = 'https://script.google.com/macros/s/AKfycbxeVuTIfvZXAMq4eNjmbnJtKvekI_P4dEhFw8UFudjxueERD-dL5pVFYgABwSGXjls6/exec'
 
 # 実行する関数名などをペイロードに設定
 payload = {
@@ -43,3 +43,4 @@ if response.status_code != 200:
     raise Exception(f"Error calling Apps Script: {response.status_code} {response.text}")
 
 print("Apps Script 実行結果：", response.text)
+
