@@ -36,7 +36,7 @@ def get_special_list_from_sheet():
     SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
     creds_path = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
     if not creds_path:
-        raise Exception("GOOGLE_APPLICATION_CREDENTIALS environment variable is not set.")
+        raise Exception("GOOGLE_APPLICATIONS_CREDENTIALS environment variable is not set.")
     creds = Credentials.from_service_account_file(creds_path, scopes=SCOPES)
     client = gspread.authorize(creds)
     SPREADSHEET_ID = "1rDQbwsNtNVaSmX04tZaf7AOX0AnPNhKSee1wv4myVTQ"  # キャラデータ管理
@@ -81,10 +81,6 @@ def reload_other_icon_cache():
 
 # ========== 空欄・重複ヘッダーでも安全な取得関数 ==========
 def get_sheet_records_with_empty_safe(worksheet, head_row=2):
-    """
-    空セルが混じっている場合でも安全にデータ取得する
-    - head_row(例:2)をヘッダーとして、そのまま重複名/空白を自動リネーム
-    """
     rows = worksheet.get_all_values()
     headers = rows[head_row - 1]
     seen = {}
@@ -107,7 +103,7 @@ def get_sheet_records_with_empty_safe(worksheet, head_row=2):
         data.append(record)
     return data
 
-# ========== 「出力結果」シートの完全一致検索（空セル安全対応） ==========
+# ========== 「出力結果」シートの完全一致検索（空セル安全対応・デバッグprint入り） ==========
 def search_battlelog_output_sheet(query, search_side):
     SPREADSHEET_ID = "1ix6hz4s0AinsepfSHNZ6CMAsNSRW-3l8nJUMBR2DpLQ"
     SHEET_NAME = "出力結果"
@@ -121,6 +117,11 @@ def search_battlelog_output_sheet(query, search_side):
 
     # ★空セル安全な取得
     all_records = get_sheet_records_with_empty_safe(worksheet, head_row=2)
+
+    # デバッグ：列名（キー一覧）を一度だけ出力
+    if all_records:
+        print("データのキー一覧:", all_records[0].keys())
+        print("最初の行サンプル:", all_records[0])
 
     # キー名対応
     if search_side == "attack":
