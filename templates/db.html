@@ -24,19 +24,29 @@
 
     .search-results-section { margin: 42px auto 32px auto; max-width: 900px; background: #f7fafd; border-radius: 18px; box-shadow: 0 6px 28px #7890b010; padding: 24px 28px; text-align: center;}
     .search-result-title { font-size: 1.17em; color: #2277bb; font-weight: bold; margin-bottom: 16px; }
-    .result-row { display: flex; align-items: flex-start; justify-content: center; gap: 44px; margin-bottom: 24px; background: #fff; border-radius: 14px; box-shadow: 0 2px 12px #338eda13; padding: 22px 10px 14px 10px; }
-    .side-col { display: flex; flex-direction: row; align-items: center; min-width: 210px; max-width: 270px; justify-content: flex-start; }
+    .result-row { display: flex; align-items: flex-end; justify-content: center; gap: 10px; margin-bottom: 24px; background: #fff; border-radius: 14px; box-shadow: 0 2px 12px #338eda13; padding: 22px 10px 14px 10px; }
+    .side-col {
+      display: flex;
+      flex-direction: row;
+      align-items: flex-end;
+      max-width: 280px;
+      min-width: 170px;
+      justify-content: flex-start;
+      gap: 4px;
+      position: relative;
+    }
     .side-icons-wrap {
       display: flex;
       flex-direction: column;
       align-items: center;
-      margin-right: 8px;
-      gap: 4px;
-      min-width: 36px;
+      gap: 3px;
+      margin-right: 2px;
+      margin-bottom: 0px;
+      min-width: 28px;
     }
-    .side-icon, .winlose-icon, .char-img {
-      width: 32px;
-      height: 32px;
+    .side-icon, .winlose-icon {
+      width: 28px;
+      height: 28px;
       border-radius: 8px;
       object-fit: contain;
       background: #e8f3ff;
@@ -45,21 +55,54 @@
       display: block;
       padding: 2px;
     }
-    .char-row { display: flex; gap: 6px; margin-bottom: 6px; }
-    .vs-mark { font-weight: bold; font-size: 1.8em; margin: 0 34px; color: #338eda; align-self: center; }
-    .result-date { color: #999; font-size: 0.97em; text-align: center; margin-top: 6px; }
+    .char-row { display: flex; gap: 5px; margin-bottom: 3px; }
+    .char-img {
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+      background: #eaf0ff;
+      object-fit: cover;
+      box-shadow: 0 0 8px #aac6f220;
+      margin: 0 0;
+      display: inline-block;
+    }
+    .vs-mark { font-weight: bold; font-size: 1.4em; margin: 0 10px; color: #338eda; align-self: center; }
+    .result-date {
+      color: #999;
+      font-size: 0.97em;
+      text-align: center;
+      margin-top: 6px;
+      margin-left: 0;
+      margin-right: 0;
+      width: 100%;
+    }
+    .side-col.right-col {
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: flex-end;
+      min-width: 180px;
+      max-width: 280px;
+      gap: 0px;
+    }
+    .right-block {
+      display: flex;
+      flex-direction: row;
+      align-items: flex-end;
+      width: 100%;
+      gap: 4px;
+    }
     @media (max-width: 768px) {
       .main-card, .search-results-section { padding: 14px 3vw 20px 3vw; }
       .result-row { flex-direction: column; gap: 7px; padding: 10px 0; }
-      .side-col { min-width: 110px; max-width: 100%; }
+      .side-col, .side-col.right-col { min-width: 110px; max-width: 100%; flex-direction: row;}
       .defense-row, .slot-label-row { gap: 5px;}
       .def-slot { width: 66px; height: 66px; }
       .def-slot img { width: 54px; height: 54px; }
       .slot-label { width: 66px; font-size: 0.87em;}
-      .side-icon, .winlose-icon, .char-img { width: 22px; height: 22px;}
-      .vs-mark { font-size: 1.3em; margin: 0 18px;}
+      .side-icon, .winlose-icon { width: 19px; height: 19px;}
+      .char-img { width: 24px; height: 24px;}
+      .vs-mark { font-size: 1em; margin: 0 8px;}
     }
-    /* モーダル部分（中央グリッド・最新版） */
     .modal-bg { display: none; position: fixed; left:0; top:0; width:100vw; height:100vh; background: rgba(0,38,80,0.25); z-index: 1001; align-items: center; justify-content: center;}
     .modal-bg.active { display: flex !important;}
     .char-modal { background: #fff; border-radius: 16px; max-width: 750px; width: 97vw; padding: 22px 24px 14px 24px; box-shadow: 0 4px 28px #2640832a; animation: modalpop .22s; min-height: 320px; position: relative;}
@@ -262,7 +305,7 @@
       }
 
       results.forEach(res => {
-        // サイドアイコン（攻防/勝敗）をキャラアイコンの左に縦並びで32pxで統一
+        // サイドアイコン（攻防/勝敗）をキャラアイコンの左に縦並びで28px、キャラは38pxで統一
         const winnerSideIcon = res.winner_icon ? `<img class="side-icon" src="${res.winner_icon}" alt="side">` : "";
         const winnerWinloseIcon = res.winner_winlose_icon ? `<img class="winlose-icon" src="${res.winner_winlose_icon}" alt="勝敗">` : "";
         const loserSideIcon  = res.loser_icon ? `<img class="side-icon" src="${res.loser_icon}" alt="side">` : "";
@@ -280,9 +323,11 @@
               <div class="char-row">${winnerChars}</div>
             </div>
             <div class="vs-mark">VS</div>
-            <div class="side-col">
-              ${loserIconsCol}
-              <div class="char-row">${loserChars}</div>
+            <div class="side-col right-col">
+              <div class="right-block">
+                ${loserIconsCol}
+                <div class="char-row">${loserChars}</div>
+              </div>
               ${dateTag}
             </div>
           </div>
@@ -291,7 +336,7 @@
     }
 
     function charImageTag(name) {
-      if (!name) return `<span style="width:32px;height:32px;display:inline-block;"></span>`;
+      if (!name) return `<span style="width:38px;height:38px;display:inline-block;"></span>`;
       let all = strikerList.concat(specialList);
       let found = all.find(c => c.name === name);
       if (found && found.image) {
