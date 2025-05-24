@@ -28,7 +28,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 10px;
+      gap: 34px;
       margin-bottom: 24px;
       background: #fff;
       border-radius: 14px;
@@ -39,10 +39,10 @@
       display: flex;
       flex-direction: row;
       align-items: center;
-      max-width: 280px;
-      min-width: 170px;
+      max-width: 320px;
+      min-width: 210px;
       justify-content: flex-start;
-      gap: 8px;
+      gap: 0;
       position: relative;
     }
     .side-icons-wrap {
@@ -50,20 +50,19 @@
       flex-direction: row;
       align-items: center;
       gap: 8px;
-      margin-right: 4px;
-      min-width: 0;
-      margin-bottom: 0;
+      width: 58px; /* サブアイコン分の横幅を必ず確保 */
+      min-width: 58px;
+      justify-content: flex-end;
+      margin-right: 18px; /* ←キャラ列と絶対に重ならないように広めに取る */
     }
     .side-icon, .winlose-icon {
       height: 36px;
-      /* widthは勝敗アイコン画像の比率次第で伸びる/狭まる（object-fit: containで違和感防止） */
       width: auto;
       border: none;
       background: none;
       margin: 0;
       display: block;
       object-fit: contain;
-      /* border-radius: 0;  // 角丸や色枠なし */
       box-shadow: none;
       padding: 0;
     }
@@ -72,6 +71,12 @@
       gap: 6px;
       align-items: center;
       margin-bottom: 0;
+    }
+    .char-row.left-row {
+      margin-left: 0;
+    }
+    .char-row.right-row {
+      margin-right: 0;
     }
     .char-img {
       width: 38px;
@@ -83,22 +88,22 @@
       margin: 0 0;
       display: inline-block;
     }
-    .vs-mark { font-weight: bold; font-size: 1.4em; margin: 0 10px; color: #338eda; align-self: center; }
+    .vs-mark { font-weight: bold; font-size: 1.4em; margin: 0 14px; color: #338eda; align-self: center; }
     .result-date {
       color: #999;
       font-size: 0.97em;
       text-align: center;
-      margin-top: 4px;
+      margin-top: 6px;
       margin-left: 0;
       margin-right: 0;
       width: 100%;
     }
     .side-col.right-col {
       flex-direction: column;
-      align-items: flex-start;
+      align-items: flex-end;
       justify-content: flex-end;
-      min-width: 180px;
-      max-width: 280px;
+      min-width: 210px;
+      max-width: 320px;
       gap: 0px;
     }
     .right-block {
@@ -106,7 +111,16 @@
       flex-direction: row;
       align-items: center;
       width: 100%;
-      gap: 8px;
+      gap: 0;
+    }
+    .right-block .side-icons-wrap {
+      margin-left: 0;
+      margin-right: 18px;
+      justify-content: flex-end;
+    }
+    .right-block .char-row {
+      margin-left: 0;
+      margin-right: 0;
     }
     @media (max-width: 768px) {
       .main-card, .search-results-section { padding: 14px 3vw 20px 3vw; }
@@ -119,8 +133,8 @@
       .side-icon, .winlose-icon { height: 23px;}
       .char-img { width: 24px; height: 24px;}
       .vs-mark { font-size: 1em; margin: 0 8px;}
-      .side-icons-wrap { gap: 4px; }
-      .right-block { gap: 4px; }
+      .side-icons-wrap { gap: 4px; width: 36px; min-width: 36px; margin-right: 7px; }
+      .right-block .side-icons-wrap { margin-right: 7px; }
     }
     .modal-bg { display: none; position: fixed; left:0; top:0; width:100vw; height:100vh; background: rgba(0,38,80,0.25); z-index: 1001; align-items: center; justify-content: center;}
     .modal-bg.active { display: flex !important;}
@@ -324,7 +338,7 @@
       }
 
       results.forEach(res => {
-        // サブアイコン横並び＆青枠なしで
+        // サブアイコンをキャラ列と横並び・高さズレなし・重なりなし・左右均等に
         const winnerSideIcon = res.winner_icon ? `<img class="side-icon" src="${res.winner_icon}" alt="side">` : "";
         const winnerWinloseIcon = res.winner_winlose_icon ? `<img class="winlose-icon" src="${res.winner_winlose_icon}" alt="勝敗">` : "";
         const loserSideIcon  = res.loser_icon ? `<img class="side-icon" src="${res.loser_icon}" alt="side">` : "";
@@ -339,13 +353,13 @@
           <div class="result-row">
             <div class="side-col">
               ${winnerIconsCol}
-              <div class="char-row">${winnerChars}</div>
+              <div class="char-row left-row">${winnerChars}</div>
             </div>
             <div class="vs-mark">VS</div>
             <div class="side-col right-col">
               <div class="right-block">
                 ${loserIconsCol}
-                <div class="char-row">${loserChars}</div>
+                <div class="char-row right-row">${loserChars}</div>
               </div>
               ${dateTag}
             </div>
