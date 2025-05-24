@@ -25,7 +25,7 @@
     .search-results-section { margin: 42px auto 32px auto; max-width: 900px; background: #f7fafd; border-radius: 18px; box-shadow: 0 6px 28px #7890b010; padding: 24px 28px; text-align: center;}
     .search-result-title { font-size: 1.17em; color: #2277bb; font-weight: bold; margin-bottom: 16px; }
     .result-row { display: flex; align-items: center; justify-content: center; gap: 28px; margin-bottom: 24px; background: #fff; border-radius: 14px; box-shadow: 0 2px 12px #338eda13; padding: 22px 10px 14px 10px; }
-    .side-col { display: flex; flex-direction: row; align-items: center; min-width: 180px; max-width: 210px; justify-content: center; }
+    .side-col { display: flex; flex-direction: row; align-items: center; min-width: 180px; max-width: 210px; justify-content: flex-start; }
     .side-icon { width: 40px; height: 40px; border-radius: 50%; object-fit: contain; box-shadow: 0 1px 8px #338eda23; background: #e8f3ff; padding: 3px; margin-right: 5px;}
     .winlose-icon { width: 36px; height: 36px; margin-right: 10px;}
     .char-row { display: flex; gap: 6px; margin-bottom: 6px; }
@@ -44,7 +44,7 @@
       .winlose-icon { width: 30px; height: 30px;}
       .char-img { width: 28px; height: 28px;}
     }
-    /* モーダル部分（前バージョン維持・中央グリッド） */
+    /* モーダル部分（中央グリッド・最新版） */
     .modal-bg { display: none; position: fixed; left:0; top:0; width:100vw; height:100vh; background: rgba(0,38,80,0.25); z-index: 1001; align-items: center; justify-content: center;}
     .modal-bg.active { display: flex !important;}
     .char-modal { background: #fff; border-radius: 16px; max-width: 750px; width: 97vw; padding: 22px 24px 14px 24px; box-shadow: 0 4px 28px #2640832a; animation: modalpop .22s; min-height: 320px; position: relative;}
@@ -227,37 +227,43 @@
     function showSearchResults(results) {
       const section = document.getElementById("searchResultsSection");
       const container = document.getElementById("searchResults");
-      section.style.display = results.length > 0 ? "block" : "none";
+      section.style.display = "block";
       container.innerHTML = "";
-      if (results.length === 0) {
-        container.innerHTML = "<div style='color:#888;font-size:1.05em;'>該当するログはありませんでした。</div>";
+
+      if (!results || results.length === 0) {
+        container.innerHTML = "<div style='color:#888;font-size:1.08em;padding:28px 0;'>該当データが存在しません</div>";
         return;
       }
+
       results.forEach(res => {
-        const winnerChars = res.winner_characters?.map(name => charImageTag(name)) || [];
-        const loserChars  = res.loser_characters?.map(name => charImageTag(name)) || [];
-        const winnerIcon = res.winner_icon ? `<img class="side-icon" src="${res.winner_icon}" alt="side">` : "";
-        const loserIcon  = res.loser_icon  ? `<img class="side-icon" src="${res.loser_icon}" alt="side">` : "";
-        const winloseIcon = res.winlose_icon ? `<img class="winlose-icon" src="${res.winlose_icon}" alt="勝ち負け">` : "";
-        const loseloseIcon = res.loselose_icon ? `<img class="winlose-icon" src="${res.loselose_icon}" alt="勝ち負け">` : "";
+        // アイコンとキャラ画像
+        const winnerSideIcon = res.winner_icon ? `<img class="side-icon" src="${res.winner_icon}" alt="side">` : "";
+        const winnerWinloseIcon = res.winner_winlose_icon ? `<img class="winlose-icon" src="${res.winner_winlose_icon}" alt="勝敗">` : "";
+        const loserSideIcon  = res.loser_icon ? `<img class="side-icon" src="${res.loser_icon}" alt="side">` : "";
+        const loserWinloseIcon  = res.loser_winlose_icon ? `<img class="winlose-icon" src="${res.loser_winlose_icon}" alt="勝敗">` : "";
+        const winnerChars = res.winner_characters?.map(name => charImageTag(name)).join('') || "";
+        const loserChars  = res.loser_characters?.map(name => charImageTag(name)).join('') || "";
+
+        // 日付（右側の下だけに出す）
         const dateTag = res.date ? `<div class="result-date">${res.date}</div>` : "";
+
         container.innerHTML += `
           <div class="result-row">
             <div class="side-col">
-              ${winnerIcon}${winloseIcon}
-              <div class="char-row">${winnerChars.join('')}</div>
-              ${dateTag}
+              ${winnerSideIcon}${winnerWinloseIcon}
+              <div class="char-row">${winnerChars}</div>
             </div>
             <div class="vs-mark">VS</div>
             <div class="side-col">
-              ${loserIcon}${loseloseIcon}
-              <div class="char-row">${loserChars.join('')}</div>
+              ${loserSideIcon}${loserWinloseIcon}
+              <div class="char-row">${loserChars}</div>
               ${dateTag}
             </div>
           </div>
         `;
       });
     }
+
     function charImageTag(name) {
       if (!name) return `<span style="width:36px;height:36px;display:inline-block;"></span>`;
       let all = strikerList.concat(specialList);
@@ -269,6 +275,7 @@
       }
     }
 
+    // 初期表示
     renderDefenseRow();
   </script>
 </body>
