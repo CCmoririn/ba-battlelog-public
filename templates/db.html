@@ -24,38 +24,55 @@
 
     .search-results-section { margin: 42px auto 32px auto; max-width: 900px; background: #f7fafd; border-radius: 18px; box-shadow: 0 6px 28px #7890b010; padding: 24px 28px; text-align: center;}
     .search-result-title { font-size: 1.17em; color: #2277bb; font-weight: bold; margin-bottom: 16px; }
-    .result-row { display: flex; align-items: flex-end; justify-content: center; gap: 10px; margin-bottom: 24px; background: #fff; border-radius: 14px; box-shadow: 0 2px 12px #338eda13; padding: 22px 10px 14px 10px; }
+    .result-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 24px;
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 2px 12px #338eda13;
+      padding: 22px 10px 14px 10px;
+    }
     .side-col {
       display: flex;
       flex-direction: row;
-      align-items: flex-end;
+      align-items: center;
       max-width: 280px;
       min-width: 170px;
       justify-content: flex-start;
-      gap: 4px;
+      gap: 8px;
       position: relative;
     }
     .side-icons-wrap {
       display: flex;
-      flex-direction: column;
+      flex-direction: row;
       align-items: center;
-      gap: 3px;
-      margin-right: 2px;
-      margin-bottom: 0px;
-      min-width: 28px;
+      gap: 8px;
+      margin-right: 4px;
+      min-width: 0;
+      margin-bottom: 0;
     }
     .side-icon, .winlose-icon {
-      width: 28px;
-      height: 28px;
-      border-radius: 8px;
-      object-fit: contain;
-      background: #e8f3ff;
-      border: 2px solid #bed1e6;
-      margin: 0 auto;
+      height: 36px;
+      /* widthは勝敗アイコン画像の比率次第で伸びる/狭まる（object-fit: containで違和感防止） */
+      width: auto;
+      border: none;
+      background: none;
+      margin: 0;
       display: block;
-      padding: 2px;
+      object-fit: contain;
+      /* border-radius: 0;  // 角丸や色枠なし */
+      box-shadow: none;
+      padding: 0;
     }
-    .char-row { display: flex; gap: 5px; margin-bottom: 3px; }
+    .char-row {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      margin-bottom: 0;
+    }
     .char-img {
       width: 38px;
       height: 38px;
@@ -71,7 +88,7 @@
       color: #999;
       font-size: 0.97em;
       text-align: center;
-      margin-top: 6px;
+      margin-top: 4px;
       margin-left: 0;
       margin-right: 0;
       width: 100%;
@@ -87,9 +104,9 @@
     .right-block {
       display: flex;
       flex-direction: row;
-      align-items: flex-end;
+      align-items: center;
       width: 100%;
-      gap: 4px;
+      gap: 8px;
     }
     @media (max-width: 768px) {
       .main-card, .search-results-section { padding: 14px 3vw 20px 3vw; }
@@ -99,9 +116,11 @@
       .def-slot { width: 66px; height: 66px; }
       .def-slot img { width: 54px; height: 54px; }
       .slot-label { width: 66px; font-size: 0.87em;}
-      .side-icon, .winlose-icon { width: 19px; height: 19px;}
+      .side-icon, .winlose-icon { height: 23px;}
       .char-img { width: 24px; height: 24px;}
       .vs-mark { font-size: 1em; margin: 0 8px;}
+      .side-icons-wrap { gap: 4px; }
+      .right-block { gap: 4px; }
     }
     .modal-bg { display: none; position: fixed; left:0; top:0; width:100vw; height:100vh; background: rgba(0,38,80,0.25); z-index: 1001; align-items: center; justify-content: center;}
     .modal-bg.active { display: flex !important;}
@@ -305,7 +324,7 @@
       }
 
       results.forEach(res => {
-        // サイドアイコン（攻防/勝敗）をキャラアイコンの左に縦並びで28px、キャラは38pxで統一
+        // サブアイコン横並び＆青枠なしで
         const winnerSideIcon = res.winner_icon ? `<img class="side-icon" src="${res.winner_icon}" alt="side">` : "";
         const winnerWinloseIcon = res.winner_winlose_icon ? `<img class="winlose-icon" src="${res.winner_winlose_icon}" alt="勝敗">` : "";
         const loserSideIcon  = res.loser_icon ? `<img class="side-icon" src="${res.loser_icon}" alt="side">` : "";
