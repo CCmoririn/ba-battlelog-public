@@ -118,34 +118,64 @@ def api_search():
         response = []
         for row in matched_rows:
             if side == "attack":
-                if row.get("防衛結果", "") != "Win":
+                # 防衛側が勝利したケースのみ抽出
+                if row.get("勝敗_2", "") != "Win":
                     continue
                 response.append({
                     "winner_type": "defense",
                     "winner_icon": get_other_icon("防衛側"),
-                    "winner_player": row.get("防衛側プレイヤー", ""),
-                    "winner_characters": [row.get(f"防衛キャラ{i+1}", "") for i in range(6)],
+                    "winner_player": row.get("プレイヤー名_2", ""),
+                    "winner_characters": [
+                        row.get("D1", ""),
+                        row.get("D2", ""),
+                        row.get("D3", ""),
+                        row.get("D4", ""),
+                        row.get("DSP1", ""),
+                        row.get("DSP2", ""),
+                    ],
                     "loser_type": "attack",
                     "loser_icon": get_other_icon("攻撃側"),
-                    "loser_player": row.get("攻撃側プレイヤー", ""),
-                    "loser_characters": [row.get(f"攻撃キャラ{i+1}", "") for i in range(6)],
+                    "loser_player": row.get("プレイヤー名", ""),
+                    "loser_characters": [
+                        row.get("A1", ""),
+                        row.get("A2", ""),
+                        row.get("A3", ""),
+                        row.get("A4", ""),
+                        row.get("ASP1", ""),
+                        row.get("ASP2", ""),
+                    ],
                     "date": row.get("日付", ""),
                 })
             else:
-                if row.get("攻撃結果", "") != "Win":
+                # 攻撃側が勝利したケースのみ抽出
+                if row.get("勝敗", "") != "Win":
                     continue
                 response.append({
                     "winner_type": "attack",
                     "winner_icon": get_other_icon("攻撃側"),
-                    "winner_player": row.get("攻撃側プレイヤー", ""),
-                    "winner_characters": [row.get(f"攻撃キャラ{i+1}", "") for i in range(6)],
+                    "winner_player": row.get("プレイヤー名", ""),
+                    "winner_characters": [
+                        row.get("A1", ""),
+                        row.get("A2", ""),
+                        row.get("A3", ""),
+                        row.get("A4", ""),
+                        row.get("ASP1", ""),
+                        row.get("ASP2", ""),
+                    ],
                     "loser_type": "defense",
                     "loser_icon": get_other_icon("防衛側"),
-                    "loser_player": row.get("防衛側プレイヤー", ""),
-                    "loser_characters": [row.get(f"防衛キャラ{i+1}", "") for i in range(6)],
+                    "loser_player": row.get("プレイヤー名_2", ""),
+                    "loser_characters": [
+                        row.get("D1", ""),
+                        row.get("D2", ""),
+                        row.get("D3", ""),
+                        row.get("D4", ""),
+                        row.get("DSP1", ""),
+                        row.get("DSP2", ""),
+                    ],
                     "date": row.get("日付", ""),
                 })
-        print("API返却データ:", response)  # ←★ここにデバッグprint追加
+        print("API返却データ:", response)  # ←★ここで最終返却内容を確認
         return jsonify({"results": response})
     except Exception as e:
         print(f"/api/search エラー: {e}")
