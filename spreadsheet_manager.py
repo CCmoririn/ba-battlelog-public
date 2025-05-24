@@ -103,7 +103,16 @@ def get_sheet_records_with_empty_safe(worksheet, head_row=2):
         data.append(record)
     return data
 
-# ========== 「出力結果」シートの完全一致検索（空セル安全対応・デバッグprint入り） ==========
+# ========== 表記ゆれを吸収して一致判定 ==========
+def normalize(s):
+    if s is None:
+        return ""
+    # スペース・全角スペースを除去、「＊」と"*"を統一、カッコ・全角半角揺れも対応
+    s = s.replace(" ", "").replace("　", "").replace("＊", "*")
+    s = s.replace("（", "(").replace("）", ")").replace("(", "(").replace(")", ")")
+    return s.strip()
+
+# ========== 「出力結果」シートの完全一致検索（空セル安全対応・比較print入り） ==========
 def search_battlelog_output_sheet(query, search_side):
     SPREADSHEET_ID = "1ix6hz4s0AinsepfSHNZ6CMAsNSRW-3l8nJUMBR2DpLQ"
     SHEET_NAME = "出力結果"
@@ -123,7 +132,6 @@ def search_battlelog_output_sheet(query, search_side):
         print("データのキー一覧:", all_records[0].keys())
         print("最初の行サンプル:", all_records[0])
 
-    # キー名対応
     if search_side == "attack":
         char_cols = ["A1", "A2", "A3", "A4", "ASP1", "ASP2"]
     else:
@@ -132,11 +140,15 @@ def search_battlelog_output_sheet(query, search_side):
     result = []
     for row in all_records:
         match = True
+        debug_compare = []
         for idx, name in enumerate(query):
             target = row.get(char_cols[idx], "")
-            if name and name != target:
-                match = False
-                break
+            debug_compare.append(f"{char_cols[idx]}: '{name}' vs '{target}' (N: '{normalize(name)}' vs '{normalize(target)}')")
+            if name and name:
+                if normalize(name) != normalize(target):
+                    match = False
+                    break
+        print("比較:", debug_compare)
         if match:
             result.append(row)
     return result
