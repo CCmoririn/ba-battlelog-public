@@ -145,6 +145,7 @@ def api_search():
                     "loser_characters": [row.get(f"防衛キャラ{i+1}", "") for i in range(6)],
                     "date": row.get("日付", ""),
                 })
+        print("API返却データ:", response)  # ←★ここにデバッグprint追加
         return jsonify({"results": response})
     except Exception as e:
         print(f"/api/search エラー: {e}")
