@@ -30,6 +30,21 @@ else:
 # キャッシュ初期化
 load_other_icon_cache()
 
+def normalize_sp_chars(chars: list, side: str) -> list:
+    """
+    6キャラのうち、SP枠（攻撃側は5,6番目/防衛側は5,6番目）を順不同一致に変換して返す
+    例: ['A1','A2','A3','A4','ASP1','ASP2'] → ['A1','A2','A3','A4', min(ASP1,ASP2), max(ASP1,ASP2)]
+    """
+    if not chars or len(chars) != 6:
+        return chars
+    main = chars[:4]
+    sp = sorted(chars[4:6])
+    return main + sp
+
+def match_team(query, target, side):
+    """SP枠のみ順不同で一致判定"""
+    return normalize_sp_chars(query, side) == normalize_sp_chars(target, side)
+
 @app.route("/", methods=["GET", "POST"])
 def index():
     if request.method == "GET":
@@ -114,9 +129,25 @@ def api_search():
         characters = data.get("characters")
         if side not in ["attack", "defense"] or not isinstance(characters, list) or len(characters) != 6:
             return jsonify({"error": "Invalid parameters"}), 400
-        matched_rows = search_battlelog_output_sheet(characters, side)
+
+        # SP枠順不同で探す
+        matched_rows = []
+        for row in search_battlelog_output_sheet(characters, side):
+            # 比較元（6キャラ配列）を抽出
+            if side == "attack":
+                target = [
+                    row.get("A1", ""), row.get("A2", ""), row.get("A3", ""), row.get("A4", ""),
+                    row.get("ASP1", ""), row.get("ASP2", "")
+                ]
+            else:
+                target = [
+                    row.get("D1", ""), row.get("D2", ""), row.get("D3", ""), row.get("D4", ""),
+                    row.get("DSP1", ""), row.get("DSP2", "")
+                ]
+            if match_team(characters, target, side):
+                matched_rows.append(row)
+
         response = []
-        # 攻撃側・防衛側・勝ち負けのアイコンURLを取得
         win_icon = get_other_icon("勝ち")
         lose_icon = get_other_icon("負け")
         attack_icon = get_other_icon("攻撃側")
