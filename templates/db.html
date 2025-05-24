@@ -33,7 +33,9 @@
       background: #fff;
       border-radius: 14px;
       box-shadow: 0 2px 12px #338eda13;
-      padding: 22px 10px 14px 10px;
+      padding: 22px 10px 34px 10px;
+      position: relative;
+      min-height: 78px;
     }
     .side-col {
       display: flex;
@@ -49,15 +51,15 @@
       display: flex;
       flex-direction: row;
       align-items: center;
-      gap: 8px;
-      width: 58px; /* サブアイコン分の横幅を必ず確保 */
-      min-width: 58px;
-      justify-content: flex-end;
-      margin-right: 18px; /* ←キャラ列と絶対に重ならないように広めに取る */
+      gap: 5px;
+      min-width: 0;
+      margin-right: 14px;
     }
     .side-icon, .winlose-icon {
-      height: 36px;
+      height: 28px;
+      max-height: 28px;
       width: auto;
+      max-width: 76px;
       border: none;
       background: none;
       margin: 0;
@@ -72,12 +74,8 @@
       align-items: center;
       margin-bottom: 0;
     }
-    .char-row.left-row {
-      margin-left: 0;
-    }
-    .char-row.right-row {
-      margin-right: 0;
-    }
+    .char-row.left-row { margin-left: 0; }
+    .char-row.right-row { margin-right: 0; }
     .char-img {
       width: 38px;
       height: 38px;
@@ -89,22 +87,14 @@
       display: inline-block;
     }
     .vs-mark { font-weight: bold; font-size: 1.4em; margin: 0 14px; color: #338eda; align-self: center; }
-    .result-date {
-      color: #999;
-      font-size: 0.97em;
-      text-align: center;
-      margin-top: 6px;
-      margin-left: 0;
-      margin-right: 0;
-      width: 100%;
-    }
     .side-col.right-col {
       flex-direction: column;
       align-items: flex-end;
-      justify-content: flex-end;
+      justify-content: center;
       min-width: 210px;
       max-width: 320px;
       gap: 0px;
+      position: relative;
     }
     .right-block {
       display: flex;
@@ -112,29 +102,45 @@
       align-items: center;
       width: 100%;
       gap: 0;
+      position: relative;
     }
     .right-block .side-icons-wrap {
       margin-left: 0;
-      margin-right: 18px;
+      margin-right: 14px;
       justify-content: flex-end;
     }
     .right-block .char-row {
       margin-left: 0;
       margin-right: 0;
     }
+    .result-date {
+      color: #999;
+      font-size: 0.97em;
+      text-align: center;
+      margin-top: 3px;
+      margin-left: 0;
+      margin-right: 0;
+      width: 100%;
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: 4px;
+      pointer-events: none;
+    }
     @media (max-width: 768px) {
       .main-card, .search-results-section { padding: 14px 3vw 20px 3vw; }
-      .result-row { flex-direction: column; gap: 7px; padding: 10px 0; }
+      .result-row { flex-direction: column; gap: 7px; padding: 10px 0 38px 0; min-height: 100px;}
       .side-col, .side-col.right-col { min-width: 110px; max-width: 100%; flex-direction: row;}
       .defense-row, .slot-label-row { gap: 5px;}
       .def-slot { width: 66px; height: 66px; }
       .def-slot img { width: 54px; height: 54px; }
       .slot-label { width: 66px; font-size: 0.87em;}
-      .side-icon, .winlose-icon { height: 23px;}
-      .char-img { width: 24px; height: 24px;}
+      .side-icon, .winlose-icon { height: 17px; max-height: 17px;}
+      .char-img { width: 22px; height: 22px;}
       .vs-mark { font-size: 1em; margin: 0 8px;}
-      .side-icons-wrap { gap: 4px; width: 36px; min-width: 36px; margin-right: 7px; }
-      .right-block .side-icons-wrap { margin-right: 7px; }
+      .side-icons-wrap { gap: 3px; margin-right: 5px; }
+      .right-block .side-icons-wrap { margin-right: 5px; }
+      .result-date { font-size: 0.88em; }
     }
     .modal-bg { display: none; position: fixed; left:0; top:0; width:100vw; height:100vh; background: rgba(0,38,80,0.25); z-index: 1001; align-items: center; justify-content: center;}
     .modal-bg.active { display: flex !important;}
@@ -338,7 +344,6 @@
       }
 
       results.forEach(res => {
-        // サブアイコンをキャラ列と横並び・高さズレなし・重なりなし・左右均等に
         const winnerSideIcon = res.winner_icon ? `<img class="side-icon" src="${res.winner_icon}" alt="side">` : "";
         const winnerWinloseIcon = res.winner_winlose_icon ? `<img class="winlose-icon" src="${res.winner_winlose_icon}" alt="勝敗">` : "";
         const loserSideIcon  = res.loser_icon ? `<img class="side-icon" src="${res.loser_icon}" alt="side">` : "";
