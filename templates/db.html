@@ -6,53 +6,190 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
-    body { background: linear-gradient(135deg, #e4f2fd 0%, #f7fafd 100%); min-height: 100vh; font-family: "Segoe UI", "ヒラギノ角ゴ ProN", "Meiryo", sans-serif; }
-    .main-card { max-width: 900px; margin: 40px auto; border-radius: 18px; background: #fff; box-shadow: 0 8px 32px rgba(50,80,160,0.09); padding: 36px 40px 30px 40px; }
-    .section-title { font-size: 1.35rem; font-weight: bold; color: #4a82c3; margin-bottom: 18px; letter-spacing: 0.08em; }
-    .tab-group { display: flex; gap: 16px; margin-bottom: 16px; }
-    .tab-btn { border: none; border-radius: 999px; padding: 8px 32px; font-weight: bold; font-size: 1.1em; background: #e8f2ff; color: #338eda; transition: background .15s, color .15s; box-shadow: 0 2px 8px rgba(80,130,200,0.06); cursor: pointer; }
-    .tab-btn.active { background: #338eda; color: #fff; }
-    .defense-row-wrap { display: flex; flex-direction: column; align-items: center; margin-bottom: 18px; }
-    .defense-row { display: flex; gap: 14px; margin-bottom: 0; justify-content: center; }
-    .def-slot { width: 92px; height: 92px; background: #bed1e6; border-radius: 16px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1.35em; font-weight: bold; cursor: pointer; position: relative; box-shadow: 0 2px 8px rgba(80,130,200,0.07); transition: box-shadow .13s; border: 2.3px solid #a7bad3; flex-direction: column; }
-    .def-slot img { width: 80px; height: 80px; border-radius: 12px; object-fit: cover; box-shadow: 0 0 8px #80b0e980; }
-    .def-slot .remove-icon { position: absolute; top: 4px; right: 8px; background: #fff; color: #ea5555; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.1em; cursor: pointer; box-shadow: 0 1px 6px #8882; border: none; }
-    .slot-label-row { display: flex; gap: 14px; justify-content: center; margin-top: 6px; margin-bottom: 2px; }
-    .slot-label { width: 92px; text-align: center; font-size: 0.98em; font-weight: bold; color: #337; letter-spacing: 0.08em; padding-bottom: 2px; user-select: none; }
-    .search-btn { background: linear-gradient(90deg, #5ad5e9, #3c8fd8 90%); color: #fff; border: none; border-radius: 12px; padding: 10px 38px; font-size: 1.25em; font-weight: bold; box-shadow: 0 2px 12px #83cbf822; margin-top: 8px; margin-bottom: 8px; transition: background .16s; }
+    body {
+      background: linear-gradient(135deg, #e4f2fd 0%, #f7fafd 100%);
+      min-height: 100vh;
+      font-family: "Segoe UI", "ヒラギノ角ゴ ProN", "Meiryo", sans-serif;
+    }
+    .main-card {
+      max-width: 900px;
+      margin: 40px auto;
+      border-radius: 18px;
+      background: #fff;
+      box-shadow: 0 8px 32px rgba(50,80,160,0.09);
+      padding: 36px 40px 30px 40px;
+    }
+    .section-title {
+      font-size: 1.35rem;
+      font-weight: bold;
+      color: #4a82c3;
+      margin-bottom: 18px;
+      letter-spacing: 0.08em;
+    }
+    .tab-group {
+      display: flex; gap: 16px; margin-bottom: 16px;
+    }
+    .tab-btn {
+      border: none; border-radius: 999px;
+      padding: 8px 32px; font-weight: bold; font-size: 1.1em;
+      background: #e8f2ff; color: #338eda;
+      transition: background .15s, color .15s;
+      box-shadow: 0 2px 8px rgba(80,130,200,0.06);
+      cursor: pointer;
+    }
+    .tab-btn.active {
+      background: #338eda;
+      color: #fff;
+    }
+    .defense-row-wrap {
+      display: flex; flex-direction: column; align-items: center; margin-bottom: 18px;
+    }
+    .defense-row {
+      display: flex; gap: 14px; margin-bottom: 0;
+      justify-content: center;
+    }
+    .def-slot {
+      width: 92px; height: 92px;
+      background: #bed1e6;
+      border-radius: 16px;
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-size: 1.35em;
+      font-weight: bold;
+      cursor: pointer;
+      position: relative;
+      box-shadow: 0 2px 8px rgba(80,130,200,0.07);
+      transition: box-shadow .13s;
+      border: 2.3px solid #a7bad3;
+      flex-direction: column;
+    }
+    .def-slot img {
+      width: 80px; height: 80px; border-radius: 12px;
+      object-fit: cover;
+      box-shadow: 0 0 8px #80b0e980;
+    }
+    .def-slot .remove-icon {
+      position: absolute;
+      top: 4px; right: 8px;
+      background: #fff; color: #ea5555; border-radius: 50%; width: 22px; height: 22px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: bold; font-size: 1.1em; cursor: pointer; box-shadow: 0 1px 6px #8882;
+      border: none;
+    }
+    .slot-label-row {
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+      margin-top: 6px;
+      margin-bottom: 2px;
+    }
+    .slot-label {
+      width: 92px;
+      text-align: center;
+      font-size: 0.98em;
+      font-weight: bold;
+      color: #337;
+      letter-spacing: 0.08em;
+      padding-bottom: 2px;
+      user-select: none;
+    }
+    .search-btn {
+      background: linear-gradient(90deg, #5ad5e9, #3c8fd8 90%);
+      color: #fff; border: none; border-radius: 12px; padding: 10px 38px; font-size: 1.25em;
+      font-weight: bold; box-shadow: 0 2px 12px #83cbf822;
+      margin-top: 8px; margin-bottom: 8px;
+      transition: background .16s;
+    }
     .search-btn:hover { background: #3499e5; }
-    .search-results-section { margin-top: 42px; margin-bottom: 32px; max-width: 900px; background: #f7fafd; border-radius: 18px; box-shadow: 0 6px 28px #7890b010; padding: 24px 28px; }
-    .search-result-title { font-size: 1.17em; color: #2277bb; font-weight: bold; margin-bottom: 16px; }
-    .result-row { display: flex; align-items: center; justify-content: center; gap: 28px; margin-bottom: 24px; background: #fff; border-radius: 14px; box-shadow: 0 2px 12px #338eda13; padding: 22px 10px 14px 10px; }
-    .side-col { display: flex; flex-direction: column; align-items: center; min-width: 180px; max-width: 210px; }
-    .side-icon { width: 40px; height: 40px; border-radius: 50%; margin-bottom: 4px; object-fit: contain; box-shadow: 0 1px 8px #338eda23; background: #e8f3ff; padding: 3px; }
-    .char-row { display: flex; gap: 6px; margin-bottom: 6px; }
-    .char-img { width: 36px; height: 36px; border-radius: 7px; background: #eaf0ff; object-fit: cover; box-shadow: 0 0 8px #aac6f220; }
-    .vs-mark { font-weight: bold; font-size: 1.3em; margin: 0 14px; color: #338eda; }
-    .result-date { color: #999; font-size: 0.97em; text-align: center; margin-top: 6px; }
+    .search-results-section {
+      margin: 42px auto 32px auto;
+      max-width: 900px;
+      background: #f7fafd;
+      border-radius: 18px;
+      box-shadow: 0 6px 28px #7890b010;
+      padding: 24px 28px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .search-result-title {
+      font-size: 1.17em;
+      color: #2277bb;
+      font-weight: bold;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+    .result-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 28px;
+      margin-bottom: 24px;
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 2px 12px #338eda13;
+      padding: 22px 10px 14px 10px;
+      min-width: 420px;
+    }
+    .side-col {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      min-width: 180px;
+      max-width: 340px;
+      margin: 0 10px;
+    }
+    .side-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      object-fit: contain;
+      box-shadow: 0 1px 8px #338eda23;
+      background: #e8f3ff;
+      padding: 3px;
+      margin-right: 8px;
+    }
+    .winlose-icon {
+      width: 36px; height: 36px;
+      object-fit: contain;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+    .char-row {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+    .char-img {
+      width: 36px; height: 36px;
+      border-radius: 7px;
+      background: #eaf0ff;
+      object-fit: cover;
+      box-shadow: 0 0 8px #aac6f220;
+    }
+    .vs-mark {
+      font-weight: bold;
+      font-size: 1.3em;
+      margin: 0 14px;
+      color: #338eda;
+    }
+    .result-date {
+      color: #999;
+      font-size: 0.97em;
+      text-align: center;
+      margin-top: 6px;
+      width: 100%;
+    }
     @media (max-width: 768px) {
       .main-card, .search-results-section { padding: 14px 3vw 20px 3vw; }
-      .result-row { flex-direction: column; gap: 7px; padding: 10px 0; }
-      .side-col { min-width: 110px; max-width: 100%; }
+      .result-row { flex-direction: column; gap: 7px; padding: 10px 0; min-width: unset;}
+      .side-col { min-width: 110px; max-width: 100%; flex-direction: row;}
       .defense-row, .slot-label-row { gap: 5px;}
       .def-slot { width: 66px; height: 66px; }
       .def-slot img { width: 54px; height: 54px; }
       .slot-label { width: 66px; font-size: 0.87em;}
+      .winlose-icon { width: 26px; height: 26px; }
+      .side-icon { width: 28px; height: 28px; }
     }
-    .modal-bg { display: none; position: fixed; left:0; top:0; width:100vw; height:100vh; background: rgba(0,38,80,0.25); z-index: 1001; align-items: center; justify-content: center;}
-    .modal-bg.active { display: flex !important;}
-    .char-modal { background: #fff; border-radius: 16px; max-width: 750px; width: 97vw; padding: 22px 24px 14px 24px; box-shadow: 0 4px 28px #2640832a; animation: modalpop .22s; min-height: 320px; position: relative;}
-    @keyframes modalpop { 0% { transform: scale(0.98); opacity:0; } 100% { transform: scale(1); opacity:1; } }
-    .modal-title { font-weight: bold; color: #338eda; margin-bottom: 10px; font-size: 1.16em; text-align: left; }
-    .modal-search { width: 100%; margin-bottom: 10px; font-size: 1.08em; padding: 6px 10px; border-radius: 7px; border:1.5px solid #c9d3e2; }
-    .char-list-grid { display: flex; flex-wrap: wrap; gap: 8px; max-height: 320px; overflow-y: auto; margin-bottom: 10px; }
-    .char-item { width: 54px; height: 54px; border-radius: 8px; border: 2px solid #bed1e6; background: #e8f0fa; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: border .11s; position: relative; }
-    .char-item.selected { border: 2.7px solid #ffcf32; box-shadow: 0 0 8px #ffe68080; }
-    .char-item img { width: 44px; height: 44px; border-radius: 6px; object-fit: cover; }
-    .modal-actions { display: flex; gap: 14px; justify-content: flex-end; margin-top: 2px; }
-    .modal-btn { background: #e8f2ff; color: #338eda; border: none; border-radius: 9px; font-weight: bold; padding: 7px 20px; font-size: 1.06em; transition: background .13s, color .13s; margin-top: 4px;}
-    .modal-btn.ok { background: #338eda; color: #fff; }
-    .modal-btn.clear { color: #ea5555; border: 1.5px solid #ea5555; background: #fff; }
   </style>
 </head>
 <body>
@@ -68,21 +205,22 @@
       ※ログイン/勝率順/登録者指定は限定公開版のみ対応予定
     </div>
     <div style="background:#f6f9fb;border-radius:14px;padding:24px 18px;margin-bottom:8px; border:1.5px solid #d7e5f3;">
-      <div style="font-weight:bold;color:#338eda; margin-bottom:6px;">編成</div>
+      <div style="font-weight:bold;color:#338eda; margin-bottom:6px;">{{atkOrDef}}編成</div>
       <div class="defense-row-wrap">
         <div class="defense-row" id="defenseRow"></div>
         <div class="slot-label-row" id="slotLabelRow"></div>
       </div>
-      <button class="search-btn" id="searchBtn">この編成で検索</button>
+      <button class="search-btn" id="searchBtn">この編成を検索</button>
     </div>
   </div>
 
+  <!-- 検索結果欄 -->
   <div class="search-results-section" id="searchResultsSection" style="display:none;">
     <div class="search-result-title">検索結果一覧</div>
     <div id="searchResults"></div>
   </div>
 
-  <!-- キャラ選択モーダル -->
+  <!-- キャラ選択モーダル（略：省略せずコピペ） -->
   <div class="modal-bg" id="modalBg">
     <div class="char-modal">
       <div class="modal-title" id="modalTitle">キャラを選択（1枠目）</div>
@@ -119,7 +257,6 @@
         }
         row.appendChild(slot);
       });
-
       const labelRow = document.getElementById("slotLabelRow");
       labelRow.innerHTML = "";
       const slotLabels = atkOrDef === "攻撃" ? atkLabels : defLabels;
@@ -135,7 +272,6 @@
       defenseTeam[idx] = null;
       renderDefenseRow();
     }
-
     document.getElementById("atkTab").onclick = () => {
       atkOrDef = "攻撃";
       document.getElementById("atkTab").classList.add("active");
@@ -148,10 +284,8 @@
       document.getElementById("atkTab").classList.remove("active");
       renderDefenseRow();
     };
-
     const modalBg = document.getElementById("modalBg");
     let selectedChar = null;
-
     function openModal(idx) {
       currSlot = idx;
       document.getElementById("modalTitle").innerText = `キャラを選択（${idx+1}枠目）`;
@@ -164,12 +298,16 @@
       modalBg.classList.remove("active");
       selectedChar = null;
     }
-
     function renderCharList() {
       const grid = document.getElementById("charListGrid");
       const filter = document.getElementById("modalSearch").value.trim();
       grid.innerHTML = "";
-      let candidates = currSlot <= 3 ? strikerList : specialList;
+      let candidates;
+      if (currSlot <= 3) {
+        candidates = strikerList;
+      } else {
+        candidates = specialList;
+      }
       candidates
         .filter(c => !defenseTeam.includes(c) || (selectedChar && selectedChar.name === c.name))
         .filter(c => c.name.includes(filter))
@@ -184,7 +322,6 @@
           grid.appendChild(div);
         });
     }
-
     document.getElementById("modalSearch").oninput = renderCharList;
     document.getElementById("modalOk").onclick = () => {
       defenseTeam[currSlot] = selectedChar;
@@ -198,7 +335,7 @@
       renderDefenseRow();
     };
 
-    // --- 検索API連携 ---
+    // --- ここから検索API連携 ---
     document.getElementById("searchBtn").onclick = async () => {
       const charNames = defenseTeam.map(c => c ? c.name : "");
       if (charNames.filter(x => !!x).length === 0) {
@@ -212,38 +349,44 @@
         body: JSON.stringify({side: side, characters: charNames})
       });
       const data = await res.json();
-      console.log("API結果", data); // ★ここでAPI受信内容を確認
       showSearchResults(data.results || []);
     };
 
+    // --- 検索結果表示 ---
     function showSearchResults(results) {
       const section = document.getElementById("searchResultsSection");
       const container = document.getElementById("searchResults");
       section.style.display = results.length > 0 ? "block" : "none";
       container.innerHTML = "";
+
       if (results.length === 0) {
         container.innerHTML = "<div style='color:#888;font-size:1.05em;'>該当するログはありませんでした。</div>";
         return;
       }
+
       results.forEach(res => {
-        const winnerChars = res.winner_characters?.map(name => charImageTag(name)) || [];
-        const loserChars  = res.loser_characters?.map(name => charImageTag(name)) || [];
+        // キャラ画像を出す（6枠）
+        const winnerChars = res.winner_characters.map(name => charImageTag(name));
+        const loserChars  = res.loser_characters.map(name => charImageTag(name));
+        // アイコンURL＋勝ち負けアイコン
         const winnerIcon = res.winner_icon ? `<img class="side-icon" src="${res.winner_icon}" alt="side">` : "";
+        const winnerWinlose = res.winner_winlose_icon ? `<img class="winlose-icon" src="${res.winner_winlose_icon}" alt="win">` : "";
         const loserIcon  = res.loser_icon  ? `<img class="side-icon" src="${res.loser_icon}" alt="side">` : "";
+        const loserWinlose = res.loser_winlose_icon ? `<img class="winlose-icon" src="${res.loser_winlose_icon}" alt="lose">` : "";
+        // 日付
         const dateTag = res.date ? `<div class="result-date">${res.date}</div>` : "";
+
         container.innerHTML += `
           <div class="result-row">
             <div class="side-col">
-              ${winnerIcon}
+              ${winnerIcon}${winnerWinlose}
               <div class="char-row">${winnerChars.join('')}</div>
-              <div style="font-weight:bold;color:#2288aa;">勝ち</div>
               ${dateTag}
             </div>
             <div class="vs-mark">VS</div>
             <div class="side-col">
-              ${loserIcon}
+              ${loserIcon}${loserWinlose}
               <div class="char-row">${loserChars.join('')}</div>
-              <div style="font-weight:bold;color:#aa3333;">負け</div>
               ${dateTag}
             </div>
           </div>
@@ -261,6 +404,7 @@
       }
     }
 
+    // 初期表示
     renderDefenseRow();
   </script>
 </body>

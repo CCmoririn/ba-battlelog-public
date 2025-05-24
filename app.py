@@ -10,7 +10,7 @@ from spreadsheet_manager import (
     get_special_list_from_sheet,
     search_battlelog_output_sheet,
     get_other_icon,
-    load_other_icon_cache        # ← 追加
+    load_other_icon_cache
 )
 
 app = Flask(__name__)
@@ -27,7 +27,7 @@ if "credentials" in os.environ:
 else:
     print("credentials not found in environment variables.")
 
-# ★★★ この位置で認証ファイルセット済みなのでキャッシュ初期化 ★★★
+# キャッシュ初期化
 load_other_icon_cache()
 
 @app.route("/", methods=["GET", "POST"])
@@ -116,14 +116,19 @@ def api_search():
             return jsonify({"error": "Invalid parameters"}), 400
         matched_rows = search_battlelog_output_sheet(characters, side)
         response = []
+        # 攻撃側・防衛側・勝ち負けのアイコンURLを取得
+        win_icon = get_other_icon("勝ち")
+        lose_icon = get_other_icon("負け")
+        attack_icon = get_other_icon("攻撃側")
+        defense_icon = get_other_icon("防衛側")
         for row in matched_rows:
             if side == "attack":
-                # 防衛側が勝利したケースのみ抽出
                 if row.get("勝敗_2", "") != "Win":
                     continue
                 response.append({
                     "winner_type": "defense",
-                    "winner_icon": get_other_icon("防衛側"),
+                    "winner_icon": defense_icon,
+                    "winner_winlose_icon": win_icon,
                     "winner_player": row.get("プレイヤー名_2", ""),
                     "winner_characters": [
                         row.get("D1", ""),
@@ -134,7 +139,8 @@ def api_search():
                         row.get("DSP2", ""),
                     ],
                     "loser_type": "attack",
-                    "loser_icon": get_other_icon("攻撃側"),
+                    "loser_icon": attack_icon,
+                    "loser_winlose_icon": lose_icon,
                     "loser_player": row.get("プレイヤー名", ""),
                     "loser_characters": [
                         row.get("A1", ""),
@@ -147,12 +153,12 @@ def api_search():
                     "date": row.get("日付", ""),
                 })
             else:
-                # 攻撃側が勝利したケースのみ抽出
                 if row.get("勝敗", "") != "Win":
                     continue
                 response.append({
                     "winner_type": "attack",
-                    "winner_icon": get_other_icon("攻撃側"),
+                    "winner_icon": attack_icon,
+                    "winner_winlose_icon": win_icon,
                     "winner_player": row.get("プレイヤー名", ""),
                     "winner_characters": [
                         row.get("A1", ""),
@@ -163,7 +169,8 @@ def api_search():
                         row.get("ASP2", ""),
                     ],
                     "loser_type": "defense",
-                    "loser_icon": get_other_icon("防衛側"),
+                    "loser_icon": defense_icon,
+                    "loser_winlose_icon": lose_icon,
                     "loser_player": row.get("プレイヤー名_2", ""),
                     "loser_characters": [
                         row.get("D1", ""),
@@ -175,7 +182,7 @@ def api_search():
                     ],
                     "date": row.get("日付", ""),
                 })
-        print("API返却データ:", response)  # ←★ここで最終返却内容を確認
+        print("API返却データ:", response)
         return jsonify({"results": response})
     except Exception as e:
         print(f"/api/search エラー: {e}")
