@@ -36,7 +36,7 @@ def get_special_list_from_sheet():
     SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
     creds_path = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
     if not creds_path:
-        raise Exception("GOOGLE_APPLICATIONS_CREDENTIALS environment variable is not set.")
+        raise Exception("GOOGLE_APPLICATION_CREDENTIALS environment variable is not set.")
     creds = Credentials.from_service_account_file(creds_path, scopes=SCOPES)
     client = gspread.authorize(creds)
     SPREADSHEET_ID = "1rDQbwsNtNVaSmX04tZaf7AOX0AnPNhKSee1wv4myVTQ"  # キャラデータ管理
@@ -107,12 +107,11 @@ def get_sheet_records_with_empty_safe(worksheet, head_row=2):
 def normalize(s):
     if s is None:
         return ""
-    # スペース・全角スペースを除去、「＊」と"*"を統一、カッコ・全角半角揺れも対応
     s = s.replace(" ", "").replace("　", "").replace("＊", "*")
     s = s.replace("（", "(").replace("）", ")").replace("(", "(").replace(")", ")")
     return s.strip()
 
-# ========== 「出力結果」シートの完全一致検索（空セル安全対応・比較print入り） ==========
+# ========== 「出力結果」シートの完全一致検索（SP枠順不同対応） ==========
 def search_battlelog_output_sheet(query, search_side):
     SPREADSHEET_ID = "1ix6hz4s0AinsepfSHNZ6CMAsNSRW-3l8nJUMBR2DpLQ"
     SHEET_NAME = "出力結果"
@@ -124,10 +123,8 @@ def search_battlelog_output_sheet(query, search_side):
     client = gspread.authorize(creds)
     worksheet = client.open_by_key(SPREADSHEET_ID).worksheet(SHEET_NAME)
 
-    # ★空セル安全な取得
     all_records = get_sheet_records_with_empty_safe(worksheet, head_row=2)
 
-    # デバッグ：列名（キー一覧）を一度だけ出力
     if all_records:
         print("データのキー一覧:", all_records[0].keys())
         print("最初の行サンプル:", all_records[0])
@@ -137,17 +134,28 @@ def search_battlelog_output_sheet(query, search_side):
     else:
         char_cols = ["D1", "D2", "D3", "D4", "DSP1", "DSP2"]
 
+    def split_main_and_sp(lst):
+        """[main4, sp1, sp2]のリストを(main4, sorted(sp1,sp2))で返す"""
+        return lst[:4], sorted(lst[4:6])
+
     result = []
     for row in all_records:
         match = True
         debug_compare = []
-        for idx, name in enumerate(query):
-            target = row.get(char_cols[idx], "")
-            debug_compare.append(f"{char_cols[idx]}: '{name}' vs '{target}' (N: '{normalize(name)}' vs '{normalize(target)}')")
-            if name and name:
-                if normalize(name) != normalize(target):
-                    match = False
-                    break
+        # クエリとデータを正規化
+        query_norm = [normalize(x) for x in query]
+        target = [normalize(row.get(c, "")) for c in char_cols]
+        # メイン枠とSP枠で分けて比較
+        q_main, q_sp = split_main_and_sp(query_norm)
+        t_main, t_sp = split_main_and_sp(target)
+        for i in range(4):
+            debug_compare.append(f"{char_cols[i]}: '{q_main[i]}' vs '{t_main[i]}'")
+            if q_main[i] != t_main[i]:
+                match = False
+                break
+        if match and q_sp != t_sp:
+            debug_compare.append(f"SP: {q_sp} vs {t_sp}（順不同一致）")
+            match = False
         print("比較:", debug_compare)
         if match:
             result.append(row)
