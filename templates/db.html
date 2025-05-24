@@ -32,8 +32,8 @@
       align-items: center;
       margin-right: 8px;
       gap: 4px;
+      min-width: 36px;
     }
-    /* ここからアイコン・キャラサイズを全て32px基準に統一 */
     .side-icon, .winlose-icon, .char-img {
       width: 32px;
       height: 32px;
@@ -46,7 +46,7 @@
       padding: 2px;
     }
     .char-row { display: flex; gap: 6px; margin-bottom: 6px; }
-    .vs-mark { font-weight: bold; font-size: 1.8em; margin: 0 56px; color: #338eda; align-self: center; }
+    .vs-mark { font-weight: bold; font-size: 1.8em; margin: 0 34px; color: #338eda; align-self: center; }
     .result-date { color: #999; font-size: 0.97em; text-align: center; margin-top: 6px; }
     @media (max-width: 768px) {
       .main-card, .search-results-section { padding: 14px 3vw 20px 3vw; }
@@ -57,7 +57,7 @@
       .def-slot img { width: 54px; height: 54px; }
       .slot-label { width: 66px; font-size: 0.87em;}
       .side-icon, .winlose-icon, .char-img { width: 22px; height: 22px;}
-      .vs-mark { font-size: 1.3em; margin: 0 24px;}
+      .vs-mark { font-size: 1.3em; margin: 0 18px;}
     }
     /* モーダル部分（中央グリッド・最新版） */
     .modal-bg { display: none; position: fixed; left:0; top:0; width:100vw; height:100vh; background: rgba(0,38,80,0.25); z-index: 1001; align-items: center; justify-content: center;}
@@ -175,7 +175,79 @@
       document.getElementById("defTab").classList.remove("active");
     };
 
-    // （キャラ選択モーダル以下は現状のまま…）
+    // キャラ選択モーダル
+    const modalBg = document.getElementById("modalBg");
+    let selectedChar = null;
+
+    function openModal(idx) {
+      currSlot = idx;
+      document.getElementById("modalTitle").innerText = `キャラを選択（${idx+1}枠目）`;
+      document.getElementById("modalSearch").value = "";
+      selectedChar = defenseTeam[idx];
+      renderCharList();
+      modalBg.classList.add("active");
+    }
+
+    function closeModal() {
+      modalBg.classList.remove("active");
+      selectedChar = null;
+    }
+
+    // キャラ一覧
+    function renderCharList() {
+      const grid = document.getElementById("charListGrid");
+      const filter = document.getElementById("modalSearch").value.trim();
+      grid.innerHTML = "";
+      let candidates;
+      if (currSlot <= 3) {
+        candidates = strikerList;
+      } else {
+        candidates = specialList;
+      }
+      candidates
+        .filter(c => !defenseTeam.includes(c) || (selectedChar && selectedChar.name === c.name))
+        .filter(c => c.name.includes(filter))
+        .forEach(c => {
+          const div = document.createElement("div");
+          div.className = "char-item" + (selectedChar && selectedChar.name === c.name ? " selected" : "");
+          div.innerHTML = `<img src="${c.image}" alt="${c.name}">`;
+          div.onclick = () => {
+            selectedChar = c;
+            renderCharList();
+          };
+          grid.appendChild(div);
+        });
+    }
+
+    document.getElementById("modalSearch").oninput = renderCharList;
+    document.getElementById("modalOk").onclick = () => {
+      defenseTeam[currSlot] = selectedChar;
+      closeModal();
+      renderDefenseRow();
+    };
+    document.getElementById("modalCancel").onclick = () => closeModal();
+    document.getElementById("modalClear").onclick = () => {
+      defenseTeam[currSlot] = null;
+      closeModal();
+      renderDefenseRow();
+    };
+
+    // --- 検索API連携 ---
+    document.getElementById("searchBtn").onclick = async () => {
+      const charNames = defenseTeam.map(c => c ? c.name : "");
+      if (charNames.filter(x => !!x).length === 0) {
+        alert("最低1キャラ以上選択してください。");
+        return;
+      }
+      const side = atkOrDef === "攻撃" ? "attack" : "defense";
+      const res = await fetch("/api/search", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({side: side, characters: charNames})
+      });
+      const data = await res.json();
+      showSearchResults(data.results || []);
+    };
 
     // --- 検索結果の整形表示 ---
     function showSearchResults(results) {
@@ -190,7 +262,7 @@
       }
 
       results.forEach(res => {
-        // サイドアイコン・勝敗アイコン・キャラアイコンすべて32px基準で表示
+        // サイドアイコン（攻防/勝敗）をキャラアイコンの左に縦並びで32pxで統一
         const winnerSideIcon = res.winner_icon ? `<img class="side-icon" src="${res.winner_icon}" alt="side">` : "";
         const winnerWinloseIcon = res.winner_winlose_icon ? `<img class="winlose-icon" src="${res.winner_winlose_icon}" alt="勝敗">` : "";
         const loserSideIcon  = res.loser_icon ? `<img class="side-icon" src="${res.loser_icon}" alt="side">` : "";
@@ -230,7 +302,12 @@
     }
 
     // 初期表示
-    renderDefenseRow();
+    window.onload = () => {
+      atkOrDef = "攻撃";
+      renderDefenseRow();
+      document.getElementById("atkTab").classList.add("active");
+      document.getElementById("defTab").classList.remove("active");
+    };
   </script>
 </body>
 </html>
