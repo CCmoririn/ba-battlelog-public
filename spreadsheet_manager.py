@@ -3,13 +3,22 @@ import gspread
 from google.oauth2.service_account import Credentials
 
 def update_spreadsheet(data):
+    """
+    スプレッドシートに認識結果を記録（常に3行目に追加）
+    """
     SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
+    
     creds_path = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
     if not creds_path:
         raise Exception("GOOGLE_APPLICATION_CREDENTIALS environment variable is not set.")
+    
     creds = Credentials.from_service_account_file(creds_path, scopes=SCOPES)
     client = gspread.authorize(creds)
-    SPREADSHEET_ID = "1U3lnPymCu4o0VPQgW02ybkq6tGzz7UHYLmDlXmpl9_s"  # 戦闘ログ
+    
+    # 戦闘ログスプレッドシートIDを環境変数から取得
+    SPREADSHEET_ID = os.environ.get("BATTLELOG_SHEET_ID")
+    if not SPREADSHEET_ID:
+        raise Exception("BATTLELOG_SHEET_ID environment variable is not set.")
     worksheet = client.open_by_key(SPREADSHEET_ID).worksheet("戦闘ログ")
     worksheet.insert_row(data, 3)
     print("スプレッドシートを更新しました:", data)
@@ -21,7 +30,10 @@ def get_striker_list_from_sheet():
         raise Exception("GOOGLE_APPLICATION_CREDENTIALS environment variable is not set.")
     creds = Credentials.from_service_account_file(creds_path, scopes=SCOPES)
     client = gspread.authorize(creds)
-    SPREADSHEET_ID = "1rDQbwsNtNVaSmX04tZaf7AOX0AnPNhKSee1wv4myVTQ"  # キャラデータ管理
+    # キャラデータ管理シートIDを環境変数から取得
+    SPREADSHEET_ID = os.environ.get("CHARDATA_SHEET_ID")
+    if not SPREADSHEET_ID:
+        raise Exception("CHARDATA_SHEET_ID environment variable is not set.")
     worksheet = client.open_by_key(SPREADSHEET_ID).worksheet("STRIKER")
     records = worksheet.get_all_records()
     char_list = []
@@ -39,7 +51,10 @@ def get_special_list_from_sheet():
         raise Exception("GOOGLE_APPLICATION_CREDENTIALS environment variable is not set.")
     creds = Credentials.from_service_account_file(creds_path, scopes=SCOPES)
     client = gspread.authorize(creds)
-    SPREADSHEET_ID = "1rDQbwsNtNVaSmX04tZaf7AOX0AnPNhKSee1wv4myVTQ"  # キャラデータ管理
+    # キャラデータ管理シートIDを環境変数から取得
+    SPREADSHEET_ID = os.environ.get("CHARDATA_SHEET_ID")
+    if not SPREADSHEET_ID:
+        raise Exception("CHARDATA_SHEET_ID environment variable is not set.")
     worksheet = client.open_by_key(SPREADSHEET_ID).worksheet("SPECIAL")
     records = worksheet.get_all_records()
     char_list = []
@@ -51,7 +66,7 @@ def get_special_list_from_sheet():
     return char_list
 
 # ========== その他アイコンのキャッシュ ==========
-_OTHER_ICON_SPREADSHEET_ID = "1rDQbwsNtNVaSmX04tZaf7AOX0AnPNhKSee1wv4myVTQ"
+_OTHER_ICON_SPREADSHEET_ID = os.environ.get("CHARDATA_SHEET_ID")
 _OTHER_ICON_SHEET = "その他アイコン"
 _other_icon_cache = {}
 
@@ -113,7 +128,10 @@ def normalize(s):
 
 # ========== 「出力結果」シートの完全一致検索（SP枠順不同対応） ==========
 def search_battlelog_output_sheet(query, search_side):
-    SPREADSHEET_ID = "1ix6hz4s0AinsepfSHNZ6CMAsNSRW-3l8nJUMBR2DpLQ"
+    # 出力結果用スプレッドシートIDを環境変数から取得
+    SPREADSHEET_ID = os.environ.get("OUTPUT_SHEET_ID")
+    if not SPREADSHEET_ID:
+        raise Exception("OUTPUT_SHEET_ID environment variable is not set.")
     SHEET_NAME = "出力結果"
     SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
     creds_path = os.environ.get("GOOGLE_APPLICATIONS_CREDENTIALS", os.environ.get("GOOGLE_APPLICATION_CREDENTIALS"))

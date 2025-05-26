@@ -1,8 +1,11 @@
 import os
+from dotenv import load_dotenv
+load_dotenv()
+
 import sys
 import unicodedata
 import subprocess
-from flask import Flask, request, render_template, jsonify
+from flask import Flask, request, render_template, jsonify, redirect, url_for
 from main import process_image, call_apps_script
 from spreadsheet_manager import (
     update_spreadsheet,
@@ -15,17 +18,9 @@ from spreadsheet_manager import (
 
 app = Flask(__name__)
 
-# Google サービスアカウント認証情報を環境変数の内容から一時ファイルに書き出す
-if "credentials" in os.environ:
-    credentials_content = os.environ["credentials"]
-    credentials_path = "/tmp/google_credentials.json"
-    os.makedirs("/tmp", exist_ok=True)
-    with open(credentials_path, "w") as f:
-        f.write(credentials_content)
-    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = credentials_path
-    print("Google Application Default Credentials have been set.")
-else:
-    print("credentials not found in environment variables.")
+# --- credentials.json方式に統一 ---
+if not os.environ.get("GOOGLE_APPLICATION_CREDENTIALS"):
+    print("GOOGLE_APPLICATION_CREDENTIALS not found in environment variables.")
 
 # キャッシュ初期化
 load_other_icon_cache()
@@ -45,10 +40,17 @@ def match_team(query, target, side):
     """SP枠のみ順不同で一致判定"""
     return normalize_sp_chars(query, side) == normalize_sp_chars(target, side)
 
-@app.route("/", methods=["GET", "POST"])
+# ========== トップページ（今後自由にデザインOK） ==========
+@app.route("/", methods=["GET"])
 def index():
+    # 仮で簡易表示。後でトップページに作り直し推奨
+    return render_template("index.html")
+
+# ========== アップロードページ ==========
+@app.route("/upload", methods=["GET", "POST"])
+def upload():
     if request.method == "GET":
-        return render_template("index.html")
+        return render_template("upload.html")  # ← index.htmlの内容をupload.htmlへコピーしておく
     file = request.files.get("image_file")
     if not file or file.filename == "":
         return "画像ファイルが選択されていません。", 400
@@ -66,6 +68,7 @@ def index():
             "防衛キャラ1", "防衛キャラ2", "防衛キャラ3",
             "防衛キャラ4", "防衛キャラ5", "防衛キャラ6"
         ]
+        # /upload/confirmへデータを引き継ぎ（POSTが理想だが、一旦renderでOK）
         return render_template(
             "confirm.html",
             row_data=row_data,
@@ -78,8 +81,9 @@ def index():
             message=f"エラーが発生しました: {e}"
         )
 
-@app.route("/confirm", methods=["POST"])
-def confirm():
+# ========== アップロード内容確認・確定 ==========
+@app.route("/upload/confirm", methods=["POST"])
+def upload_confirm():
     try:
         row_data = [
             request.form.get(f"field{i}", "")
@@ -91,10 +95,7 @@ def confirm():
             [sys.executable, "call_gas.py"],
             check=True
         )
-        return render_template(
-            "complete.html",
-            message="アップロードが完了しました"
-        )
+        return redirect(url_for("upload_complete"))
     except subprocess.CalledProcessError as e:
         print(f"しらす式変換エラー: {e}")
         return render_template(
@@ -108,6 +109,15 @@ def confirm():
             message=f"スプレッドシートの更新に失敗しました: {e}"
         )
 
+# ========== アップロード完了 ==========
+@app.route("/upload/complete", methods=["GET"])
+def upload_complete():
+    return render_template(
+        "complete.html",
+        message="アップロードが完了しました"
+    )
+
+# ========== 編成検索ページ ==========
 @app.route("/search")
 def search():
     try:
