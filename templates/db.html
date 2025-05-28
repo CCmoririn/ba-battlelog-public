@@ -363,6 +363,11 @@
   </div>
 
   <script>
+function kataToHira(str) {
+  return str.replace(/[\u30a1-\u30f6]/g, function(match) {
+    return String.fromCharCode(match.charCodeAt(0) - 0x60);
+  });
+}
     // サイドバー動作
     const hamburgerBtn = document.getElementById('hamburger-btn');
     const sidebar = document.getElementById('sidebar');
@@ -467,10 +472,11 @@
       } else {
         candidates = specialList;
       }
-      candidates
-        .filter(c => !defenseTeam.includes(c) || (selectedChar && selectedChar.name === c.name))
-        .filter(c => c.name.includes(filter))
-        .forEach(c => {
+        const filterText = kataToHira(filter);
+  candidates
+    .filter(c => !defenseTeam.includes(c) || (selectedChar && selectedChar.name === c.name))
+    .filter(c => kataToHira(c.name).includes(filterText))
+    .forEach(c => {
           const div = document.createElement("div");
           div.className = "char-item" + (selectedChar && selectedChar.name === c.name ? " selected" : "");
           div.innerHTML = `<img class="char-img" src="${c.image}" alt="${c.name}">`;
