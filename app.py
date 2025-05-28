@@ -6,14 +6,15 @@ import sys
 import unicodedata
 import subprocess
 from flask import Flask, request, render_template, jsonify, redirect, url_for
-from main import process_image, call_apps_script
+# from main import process_image, call_apps_script ← ここはコメントアウト！
 from spreadsheet_manager import (
     update_spreadsheet,
     get_striker_list_from_sheet,
     get_special_list_from_sheet,
     search_battlelog_output_sheet,
     get_other_icon,
-    load_other_icon_cache
+    load_other_icon_cache,
+    refresh_output_sheet_cache
 )
 
 app = Flask(__name__)
@@ -40,17 +41,16 @@ def match_team(query, target, side):
     """SP枠のみ順不同で一致判定"""
     return normalize_sp_chars(query, side) == normalize_sp_chars(target, side)
 
-# ========== トップページ（今後自由にデザインOK） ==========
+# ========== トップページ ==========
 @app.route("/", methods=["GET"])
 def index():
-    # 仮で簡易表示。後でトップページに作り直し推奨
     return render_template("index.html")
 
 # ========== アップロードページ ==========
 @app.route("/upload", methods=["GET", "POST"])
 def upload():
     if request.method == "GET":
-        return render_template("upload.html")  # ← index.htmlの内容をupload.htmlへコピーしておく
+        return render_template("upload.html")
     file = request.files.get("image_file")
     if not file or file.filename == "":
         return "画像ファイルが選択されていません。", 400
@@ -59,6 +59,7 @@ def upload():
     file_path = os.path.join(uploads_dir, file.filename)
     file.save(file_path)
     try:
+        from main import process_image  # ← 関数内でimport
         row_data = process_image(file_path)
         labels = [
             "日付", "攻撃側プレイヤー", "攻撃結果",
@@ -68,7 +69,6 @@ def upload():
             "防衛キャラ1", "防衛キャラ2", "防衛キャラ3",
             "防衛キャラ4", "防衛キャラ5", "防衛キャラ6"
         ]
-        # /upload/confirmへデータを引き継ぎ（POSTが理想だが、一旦renderでOK）
         return render_template(
             "confirm.html",
             row_data=row_data,
@@ -85,16 +85,21 @@ def upload():
 @app.route("/upload/confirm", methods=["POST"])
 def upload_confirm():
     try:
+        from main import call_apps_script  # ← 関数内でimport
         row_data = [
             request.form.get(f"field{i}", "")
             for i in range(18)
         ]
         row_data = [unicodedata.normalize("NFKC", v) for v in row_data]
         update_spreadsheet(row_data)
+
+        # しらす式変換 → 完了してからキャッシュ更新！
         subprocess.run(
             [sys.executable, "call_gas.py"],
             check=True
         )
+        refresh_output_sheet_cache()  # ← 順番をここに
+
         return redirect(url_for("upload_complete"))
     except subprocess.CalledProcessError as e:
         print(f"しらす式変換エラー: {e}")
@@ -132,41 +137,47 @@ def search():
 @app.route("/api/search", methods=["POST"])
 def api_search():
     try:
+        from datetime import datetime
+
         data = request.json
         if not data:
             return jsonify({"error": "No data received"}), 400
         side = data.get("side")
         characters = data.get("characters")
+        only_limited = data.get("only_limited", False)  # 限定だけ検索
         if side not in ["attack", "defense"] or not isinstance(characters, list) or len(characters) != 6:
             return jsonify({"error": "Invalid parameters"}), 400
+        if not any(characters):
+            return jsonify({"error": "検索条件を1つ以上選択してください。"}), 400
 
-        # SP枠順不同で探す
-        matched_rows = []
-        for row in search_battlelog_output_sheet(characters, side):
-            # 比較元（6キャラ配列）を抽出
-            if side == "attack":
-                target = [
-                    row.get("A1", ""), row.get("A2", ""), row.get("A3", ""), row.get("A4", ""),
-                    row.get("ASP1", ""), row.get("ASP2", "")
-                ]
-            else:
-                target = [
-                    row.get("D1", ""), row.get("D2", ""), row.get("D3", ""), row.get("D4", ""),
-                    row.get("DSP1", ""), row.get("DSP2", "")
-                ]
-            if match_team(characters, target, side):
-                matched_rows.append(row)
+        matched_rows = search_battlelog_output_sheet(characters, side)
+
+        # ▼▼▼ ここで日付で降順（新しい順）に並べ替え
+        def parse_date(row):
+            try:
+                return datetime.strptime(row.get("日付", ""), "%Y-%m-%d %H:%M:%S")
+            except Exception:
+                return datetime.min
+
+        matched_rows = sorted(matched_rows, key=parse_date, reverse=True)
+        # ▲▲▲ ここまで
 
         response = []
         win_icon = get_other_icon("勝ち")
         lose_icon = get_other_icon("負け")
         attack_icon = get_other_icon("攻撃側")
         defense_icon = get_other_icon("防衛側")
+
         for row in matched_rows:
+            # 「限定のみ」指定がONなら、限定source以外はスキップ
+            if only_limited and row.get("source") != "限定":
+                continue
+
             if side == "attack":
                 if row.get("勝敗_2", "") != "Win":
                     continue
                 response.append({
+                    "source": row.get("source", ""),
                     "winner_type": "defense",
                     "winner_icon": defense_icon,
                     "winner_winlose_icon": win_icon,
@@ -197,6 +208,7 @@ def api_search():
                 if row.get("勝敗", "") != "Win":
                     continue
                 response.append({
+                    "source": row.get("source", ""),
                     "winner_type": "attack",
                     "winner_icon": attack_icon,
                     "winner_winlose_icon": win_icon,
