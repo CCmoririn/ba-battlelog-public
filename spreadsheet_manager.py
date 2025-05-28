@@ -44,6 +44,9 @@ def _fetch_output_sheet_records():
     return all_records_main
 
 def refresh_output_sheet_cache():
+    """
+    従来通り「全件」取得でキャッシュ更新
+    """
     global _output_sheet_cache
     print("出力結果シートのキャッシュを更新します...")
     try:
@@ -56,6 +59,45 @@ def refresh_output_sheet_cache():
     except Exception as e:
         print(f"出力結果シートキャッシュの更新失敗: {e}")
         # 失敗時は古いキャッシュで続行
+
+def append_latest_main_row_to_cache():
+    """
+    新方式：出力結果シート3行目（直近追加分）のみ取得し、キャッシュ先頭に追加
+    """
+    global _output_sheet_cache
+    try:
+        SPREADSHEET_ID = os.environ.get("OUTPUT_SHEET_ID")
+        if not SPREADSHEET_ID:
+            raise Exception("OUTPUT_SHEET_ID environment variable is not set.")
+        SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
+        creds_path = os.environ.get("GOOGLE_APPLICATIONS_CREDENTIALS", os.environ.get("GOOGLE_APPLICATION_CREDENTIALS"))
+        if not creds_path:
+            raise Exception("GOOGLE_APPLICATION_CREDENTIALS environment variable is not set.")
+        creds = Credentials.from_service_account_file(creds_path, scopes=SCOPES)
+        client = gspread.authorize(creds)
+        worksheet_main = client.open_by_key(SPREADSHEET_ID).worksheet("出力結果")
+        latest_row = worksheet_main.row_values(3)  # 常に3行目に追加してる設計の前提
+        headers = worksheet_main.row_values(2)     # 2行目がヘッダー
+
+        # 行データ→辞書化（ヘッダー数に足りない分は空文字で埋める）
+        row_dict = {}
+        for i, h in enumerate(headers):
+            key = h.strip() if h.strip() else f"空欄_{i}"
+            row_dict[key] = latest_row[i] if i < len(latest_row) else ""
+
+        # source属性を「限定」固定で付与（一般版の時は"一般"に変えてOK）
+        row_dict["source"] = "限定"
+
+        # キャッシュ未初期化時は一度全件ロード
+        if _output_sheet_cache["data_main"] is None:
+            refresh_output_sheet_cache()
+        # 先頭に追加
+        _output_sheet_cache["data_main"].insert(0, row_dict)
+
+        print("最新行をキャッシュに追加しました")
+
+    except Exception as e:
+        print(f"最新行追加に失敗しました: {e}")
 
 def get_output_sheet_cache():
     global _output_sheet_cache
