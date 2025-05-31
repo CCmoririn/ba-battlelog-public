@@ -14,8 +14,8 @@ from spreadsheet_manager import (
     search_battlelog_output_sheet,
     get_other_icon,
     load_other_icon_cache,
-    append_battlelog_row_from_api,    # 1件append用
-    fetch_latest_output_row_as_dict   # 3行目dict取得用
+    append_battlelog_row_from_api,
+    fetch_latest_output_row_as_dict
 )
 
 LIMITED_SERVER_URL = os.environ.get("LIMITED_SERVER_URL")
@@ -104,16 +104,13 @@ def upload_confirm():
         row_data = [unicodedata.normalize("NFKC", v) for v in row_data]
         update_spreadsheet(row_data)
 
-        # しらす式変換 → 出力結果反映→3行目をappend！
         subprocess.run(
             [sys.executable, "call_gas.py"],
             check=True
         )
 
         latest_row = fetch_latest_output_row_as_dict()
-        # ▼▼▼ ここでprintを追加 ▼▼▼
         print("DEBUG: latest_row =", latest_row)
-        # ▲▲▲
 
         if latest_row:
             append_battlelog_row_from_api(latest_row, source="一般")
@@ -142,7 +139,7 @@ def upload_complete():
         message="アップロードが完了しました"
     )
 
-@app.route("/search")
+@app.route("/search", methods=["GET"])
 def search():
     try:
         striker_list = get_striker_list_from_sheet()
@@ -151,7 +148,12 @@ def search():
         print(f"キャラリスト取得エラー: {e}")
         striker_list = []
         special_list = []
-    return render_template("db.html", striker_list=striker_list, special_list=special_list)
+    # request.args（クエリパラメータ）はそのままテンプレートへ
+    return render_template("db.html",
+        striker_list=striker_list,
+        special_list=special_list,
+        request=request
+    )
 
 @app.route("/api/search", methods=["POST"])
 def api_search():
