@@ -11,7 +11,7 @@
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/plugins/Swap/Sortable.swap.min.js"></script>
   <style>
-    body { background: linear-gradient(135deg, #e4f2fd 0%, #f7fafd 100%); min-height: 100vh; font-family: "Segoe UI", "ヒラギノ角ゴ ProN", "Meiryo", sans-serif; margin:0; }
+    body { background: linear-gradient(135deg, #e4f2fd 0%, #f7fafd 100%); min-height: 100vh; font-family: "Segoe UI", "ヒラギノ角ゴ ProN", "Meiryo", sans-serif; margin:0; padding-top: 70px;}
     .navbar-custom {
       position: fixed;
       top: 0;
@@ -136,7 +136,6 @@
       .navbar-custom { padding: 0 11px 0 7px; }
       .logo-text { font-size: 1.48em; }
     }
-    body { padding-top: 70px; }
     .main-card, .search-results-section {
       max-width: 1240px;
       margin: 36px auto;
@@ -148,7 +147,7 @@
     .section-title { font-size: 1.35rem; font-weight: bold; color: #4a82c3; margin-bottom: 18px; letter-spacing: 0.08em; }
     .tab-group {
       display: flex;
-      justify-content: space-between; /* 左右分割 */
+      justify-content: space-between;
       align-items: center;
       margin-bottom: 16px;
       gap: 0;
@@ -159,7 +158,6 @@
     }
     .tab-btn { border: none; border-radius: 999px; padding: 8px 32px; font-weight: bold; font-size: 1.1em; background: #e8f2ff; color: #338eda; transition: background .15s, color .15s; box-shadow: 0 2px 8px rgba(80,130,200,0.06); cursor: pointer; }
     .tab-btn.active { background: #338eda; color: #fff; }
-    /* ▼ 全クリアボタン（右端） */
     .clear-all-btn {
       background: #edf3fa;
       color: #3c6da7;
@@ -178,14 +176,25 @@
       color: #ea5555;
       border-color: #81b8eb;
     }
+    .info-panel {
+      background: #f7fcff;
+      border: 2px solid #bfe2ff;
+      border-radius: 15px;
+      box-shadow: 0 2px 12px #d7ebfa36;
+      max-width: 900px;
+      margin: 30px auto 0 auto;
+      padding: 22px 18px 15px 18px;
+      font-size: 1.07em;
+      color: #236396;
+      text-align: left;
+      transition: margin-top .2s;
+    }
     @media (max-width: 900px) {
       .tab-btns { gap: 8px; }
-      .clear-all-btn {
-        font-size: 0.89em;
-        padding: 4px 8px;
-      }
+      .clear-all-btn { font-size: 0.89em; padding: 4px 8px; }
+      .info-panel { max-width: 99vw; padding: 12px 2vw 10px 2vw; }
     }
-    .defense-row-wrap { display: flex; flex-direction: column; align-items: center; margin-bottom: 18px; position:relative; }
+   .defense-row-wrap { display: flex; flex-direction: column; align-items: center; margin-bottom: 18px; position:relative; }
     .defense-row { display: flex; gap: 14px; margin-bottom: 0; justify-content: center; }
     .def-slot { width: 92px; height: 92px; background: #bed1e6; border-radius: 16px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1.35em; font-weight: bold; cursor: pointer; position: relative; box-shadow: 0 2px 8px rgba(80,130,200,0.07); transition: box-shadow .13s; border: 2.3px solid #a7bad3; flex-direction: column; }
     .def-slot img { width: 80px; height: 80px; border-radius: 12px; object-fit: cover; box-shadow: 0 0 8px #80b0e980; }
@@ -342,7 +351,6 @@
   </style>
 </head>
 <body>
-<!-- ▼▼ 共通ナビゲーション・ヘッダー・サイドバー ▼▼ -->
 <header>
   <nav class="navbar-custom">
     <a href="/" class="logo-link">
@@ -363,7 +371,6 @@
     <a href="/search" class="sidebar-link">編成検索</a>
   </aside>
 </header>
-<!-- ▲▲ ヘッダー・サイドバーここまで ▲▲ -->
 
 {% set show_results = request.args.get('side') is not none %}
 
@@ -399,6 +406,17 @@
   </div>
 </div>
 
+<!-- ▼ info-panel（案内枠・フォーム下） ▼ -->
+<div class="info-panel" id="infoPanel">
+  このページでは、対抗戦の編成データを検索できます。<br><br>
+  ・枠をタップしてキャラを選択できます。<br>
+  ・キャラを削除したい場合は、枠内の「×」ボタンを押してください。<br>
+  ・キャラの並び順を変更したい場合は、枠をドラッグ＆ドロップで入れ替えできます。<br>
+  ・全クリアボタンで全ての枠をリセットできます。<br>
+  ・攻撃側・防衛側タブを切り替えて、どちらの編成でも検索できます。<br><br>
+  検索結果が表示されない場合は、条件を変えて再度お試しください。<br>
+  データは随時追加・更新されています。
+</div>
 {% if show_results %}
   <div class="search-results-section" id="searchResultsSection">
     <div class="search-result-title">検索結果一覧</div>
@@ -419,6 +437,13 @@
     </div>
   </div>
 </div>
+
+<!-- ▼ 共通フッター ▼ -->
+<footer class="footer-custom" style="margin-top:38px;">
+  ・運営/管理：作成者Twitter（<a href="https://twitter.com/BestM_JP" target="_blank" class="text-info fw-bold">@BestM_JP</a>）<br>
+  ・本サービスは個人による非公式ファンツールです
+</footer>
+
 <script>
 function kataToHira(str) {
   return str.replace(/[\u30a1-\u30f6]/g, function(match) {
@@ -567,13 +592,21 @@ window.onload = () => {
   renderDefenseRow();
   document.getElementById("atkTab").classList.toggle("active", atkOrDef === "攻撃");
   document.getElementById("defTab").classList.toggle("active", atkOrDef === "防衛");
-  // 検索結果の描画（検索時のみ）
+
+  // ▼ 案内パネル移動処理
   {% if show_results %}
-  doSearchFromParams();
+    // 検索結果がある場合、案内パネルをフッターの上に移動
+    const infoPanel = document.getElementById('infoPanel');
+    const footer = document.querySelector('.footer-custom');
+    if (infoPanel && footer) {
+      footer.parentNode.insertBefore(infoPanel, footer);
+      infoPanel.style.marginTop = "38px";
+    }
+    doSearchFromParams();
   {% endif %}
 };
 
-// --- キャラ選択モーダルなど（省略せず現状通り） ---
+// --- キャラ選択モーダルなど ---
 const modalBg = document.getElementById("modalBg");
 let selectedChar = null;
 let lastSelectedCharName = null;
@@ -613,7 +646,6 @@ function renderCharList() {
       const div = document.createElement("div");
       div.className = "char-item" + (selectedChar && selectedChar.name === c.name ? " selected" : "");
       div.innerHTML = `<img class="char-img" src="${c.image}" alt="${c.name}">`;
-      // 2回目クリックで確定
       div.onclick = () => {
         if (selectedChar && selectedChar.name === c.name) {
           defenseTeam[currSlot] = c;
