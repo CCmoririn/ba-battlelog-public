@@ -79,6 +79,22 @@
     .edit-btn:hover {
       background: #3499e5;
     }
+    /* --- 画像プレビュー用 --- */
+    .preview-box {
+      text-align: center;
+      margin: 32px auto 8px auto;
+    }
+    .preview-box img {
+      max-width: 98%;
+      border-radius: 10px;
+      box-shadow: 0 2px 12px rgba(80,150,230,0.10);
+      margin-bottom: 8px;
+    }
+    .preview-caption {
+      font-size: 0.98em;
+      color: #557;
+      margin-bottom: 2px;
+    }
     /* --- info-panel案内枠 --- */
     .info-panel {
       background: #f7fcff;
@@ -97,6 +113,7 @@
       .edit-title { font-size: 1.28em; }
       .edit-table th { font-size: 0.99em; }
       .info-panel { max-width: 99vw; padding: 14px 3vw 12px 3vw;}
+      .preview-box img { max-width: 100%; }
     }
     /* ▼ ローディングモーダル部品追加 */
     #loading-modal {
@@ -189,6 +206,16 @@
         <button type="submit" class="edit-btn">この内容で確定</button>
       </div>
     </form>
+
+    <!-- ▼ プレビュー画像ここに追加！ ▼ -->
+    {% if preview_image_url %}
+    <div class="preview-box">
+      <img src="{{ preview_image_url }}" alt="アップロード画像プレビュー">
+      <div class="preview-caption">※ アップロード画像のプレビュー</div>
+    </div>
+    {% endif %}
+    <!-- ▲ ここまで ▲ -->
+
   </div>
 
   <!-- ▼ info-panel（案内枠・フッターの上） ▼ -->
@@ -212,10 +239,11 @@
   <!-- ▲ ローディングモーダルここまで ▲ -->
 
   <!-- ▼ 共通フッター ▼ -->
-  <footer class="footer-custom">
-    ・運営/管理：作成者Twitter（<a href="https://twitter.com/BestM_JP" target="_blank" class="text-info fw-bold">@BestM_JP</a>）<br>
-    ・本サービスは個人による非公式ファンツールです
-  </footer>
+<footer class="footer-custom">
+  ・運営/管理：作成者Twitter（<a href="https://twitter.com/BestM_JP" target="_blank" class="text-info fw-bold">@BestM_JP</a>）<br>
+  ・本サービスは個人による非公式ファンツールです<br>
+  ・<a href="/privacy.html" class="text-info fw-bold" style="text-decoration:underline;">プライバシーポリシー</a>
+</footer>
 
   <script>
     // ローディング表示制御

@@ -60,6 +60,25 @@
       .logo-text { font-size: 1.48em; }
     }
 
+    .season-note {
+      display: block;
+      margin: 36px auto 16px auto;
+      max-width: 640px;
+      background: linear-gradient(90deg, #ffecd2 0%, #fcb69f 100%);
+      color: #c03d2b;
+      font-size: 1.22em;
+      font-weight: bold;
+      text-align: center;
+      border-radius: 12px;
+      box-shadow: 0 3px 18px #efcfb480;
+      padding: 15px 10px 12px 10px;
+      letter-spacing: 0.03em;
+      border: 2.3px solid #ffd3ad;
+    }
+    @media (max-width: 700px) {
+      .season-note { font-size: 1em; margin: 21px 4vw 11px 4vw; }
+    }
+
     .main-card {
       max-width: 520px;
       margin: 40px auto 24px auto;
@@ -233,6 +252,12 @@
   </header>
   <!-- ▲▲ ヘッダー・サイドバーここまで ▲▲ -->
 
+  <!-- ▼▼ 現行シーズンアップロード案内（目立つ注意書き） ▼▼ -->
+  <div class="season-note">
+    ※アップロードは<strong>現行シーズンの画像のみ</strong>でお願いします
+  </div>
+  <!-- ▲▲ -->
+
   <main>
     <div class="main-card">
       <div class="upload-title">対抗戦ログアップロード</div>
@@ -273,10 +298,11 @@
   <!-- ▲▲ ローディングモーダル：ここまで ▲▲ -->
 
   <!-- ▼ 共通フッター ▼ -->
-  <footer class="footer-custom">
-    ・運営/管理：作成者Twitter（<a href="https://twitter.com/BestM_JP" target="_blank" class="text-info fw-bold">@BestM_JP</a>）<br>
-    ・本サービスは個人による非公式ファンツールです
-  </footer>
+<footer class="footer-custom">
+  ・運営/管理：作成者Twitter（<a href="https://twitter.com/BestM_JP" target="_blank" class="text-info fw-bold">@BestM_JP</a>）<br>
+  ・本サービスは個人による非公式ファンツールです<br>
+  ・<a href="/privacy.html" class="text-info fw-bold" style="text-decoration:underline;">プライバシーポリシー</a>
+</footer>
 
   <script>
     // 画像選択時にプレビュー表示

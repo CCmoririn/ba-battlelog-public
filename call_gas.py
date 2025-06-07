@@ -24,7 +24,7 @@ if not creds.valid or creds.expired:
 access_token = creds.token
 
 # Apps Script WebアプリのエンドポイントURL（一般公開用GASデプロイURLに変更済み）
-script_url = 'https://script.google.com/macros/s/AKfycbxeVuTIfvZXAMq4eNjmbnJtKvekI_P4dEhFw8UFudjxueERD-dL5pVFYgABwSGXjls6/exec'
+script_url = 'https://script.google.com/macros/s/AKfycbxuEhXZOagcyBd2vCFXX0pUgxVw2KAdtML3Grpm1b4c4jBgdV65ja925tj1knsYS_WngA/exec'
 
 # 実行する関数名などをペイロードに設定
 payload = {
