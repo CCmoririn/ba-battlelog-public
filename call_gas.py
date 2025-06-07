@@ -23,8 +23,10 @@ if not creds.valid or creds.expired:
     creds.refresh(Request())
 access_token = creds.token
 
-# Apps Script WebアプリのエンドポイントURL（一般公開用GASデプロイURLに変更済み）
-script_url = 'https://script.google.com/macros/s/AKfycbxuEhXZOagcyBd2vCFXX0pUgxVw2KAdtML3Grpm1b4c4jBgdV65ja925tj1knsYS_WngA/exec'
+# Apps Script WebアプリのエンドポイントURL（環境変数から取得）
+script_url = os.environ.get("GAS_SCRIPT_URL")
+if not script_url:
+    raise Exception("Environment variable 'GAS_SCRIPT_URL' is not set or empty.")
 
 # 実行する関数名などをペイロードに設定
 payload = {
@@ -43,4 +45,3 @@ if response.status_code != 200:
     raise Exception(f"Error calling Apps Script: {response.status_code} {response.text}")
 
 print("Apps Script 実行結果：", response.text)
-
