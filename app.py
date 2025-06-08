@@ -306,6 +306,10 @@ def tips():
 def tips_character_growth():
     return render_template('character-growth.html')
 
+# ========== お問い合わせページ ==========
+@app.route("/contact.html")
+def contact():
+    return render_template("contact.html")
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
