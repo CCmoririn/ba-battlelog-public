@@ -294,6 +294,19 @@ def privacy():
     return render_template("privacy.html")
 # ▲▲▲ ここまで ▲▲▲
 
+@app.route('/guide')
+def guide():
+    return render_template('guide.html')
+
+@app.route('/tips')
+def tips():
+    return render_template('tips.html')
+
+@app.route('/tips/character-growth')
+def tips_character_growth():
+    return render_template('character-growth.html')
+
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
