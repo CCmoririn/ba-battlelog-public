@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
 <meta name="google-site-verification" content="4GMC-Y_YcFE5giRV5RQjmObgAuhmClSSKmrSs333ZFY" />
+<meta name="google-site-verification" content="5jdGgzQ9EcR6LwSRfCz2ONeqcsCQ9Cvhrw0Wylp1DcA" />
 <script async src="https://pagead2.googlesyndication.com/pagead/js?client=ca-pub-7051331824444850"
      crossorigin="anonymous"></script>
   <title>BlueArchive対抗戦DB | トップページ</title>
@@ -302,6 +303,24 @@
     .index-sub-links a:hover {
       color: #1d547a;
     }
+
+.title-pc {
+  display: inline;
+}
+.title-sp {
+  display: none;
+}
+
+@media (max-width: 899px) {
+  .title-pc {
+    display: none;
+  }
+  .title-sp {
+    display: inline;
+  }
+}
+
+
   </style>
 </head>
 <body>
@@ -328,15 +347,18 @@
   </header>
   <!-- ▲▲ ヘッダー・サイドバーここまで ▲▲ -->
 
-  <main>
-    <div class="title-panel">
-      <div class="main-title">BlueArchive<b>対抗戦DB</b></div>
-      <div class="sub-title">ブルーアーカイブ戦術対抗戦の編成・結果データベース</div>
+ <main>
+  <div class="title-panel">
+    <div class="main-title">
+      <span class="title-pc">BlueArchive<b>対抗戦DB</b></span>
+      <span class="title-sp">BlueArchive<br><b>対抗戦DB</b></span>
     </div>
-    <div class="btn-menu-wrap">
-      <a href="/upload" class="menu-btn">アップロード</a>
-      <a href="/search" class="menu-btn">編成検索</a>
-    </div>
+    <div class="sub-title">ブルーアーカイブ戦術対抗戦の編成・結果データベース</div>
+  </div>
+  <div class="btn-menu-wrap">
+    <a href="/upload" class="menu-btn">アップロード</a>
+    <a href="/search" class="menu-btn">編成検索</a>
+  </div>
 
     <!-- ▼▼▼ お知らせを一番上に ▼▼▼ -->
     <div class="panel-box">
