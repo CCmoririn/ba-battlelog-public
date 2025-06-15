@@ -3,15 +3,13 @@ import gspread
 from google.oauth2.service_account import Credentials
 import threading
 import time
+import json
 
 from config import CURRENT_SEASON, SEASON_LIST, CACHE_DIR
 
 # ========== アップロード時スプレッドシート追加 ==========
 
 def update_spreadsheet(data, season=None):
-    """
-    指定シーズンの「変換前_シーズン名」シートに認識結果を記録（常に3行目に追加）
-    """
     SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
     creds_path = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
     if not creds_path:
@@ -34,14 +32,12 @@ def get_cache_filepath(season):
     return os.path.join(CACHE_DIR, f"{season}.json")
 
 def save_output_cache(season, data):
-    import json
     path = get_cache_filepath(season)
     with open(path, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
     print(f"キャッシュ保存完了: {path}（{len(data)}件）")
 
 def load_output_cache(season):
-    import json
     path = get_cache_filepath(season)
     if not os.path.exists(path):
         print(f"キャッシュファイルなし: {path}")
@@ -56,7 +52,8 @@ def load_output_cache(season):
 
 def refresh_output_sheet_cache(season=None):
     """
-    指定シーズンの「出力結果_シーズン名」シートからキャッシュを生成・保存
+    限定版：限定DB「出力結果_シーズン名」と「一般版から転送」シート両方から取得し
+    source="限定"/"一般"を付けてマージ、日付順でまとめてキャッシュ保存
     """
     SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
     creds_path = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
@@ -64,20 +61,50 @@ def refresh_output_sheet_cache(season=None):
         raise Exception("GOOGLE_APPLICATION_CREDENTIALS environment variable is not set.")
     creds = Credentials.from_service_account_file(creds_path, scopes=SCOPES)
     client = gspread.authorize(creds)
-    SPREADSHEET_ID = os.environ.get("OUTPUT_SHEET_ID")
-    if not SPREADSHEET_ID:
+
+    # 限定DBのスプレッドシートID
+    LIMITED_OUTPUT_SHEET_ID = os.environ.get("OUTPUT_SHEET_ID")
+    if not LIMITED_OUTPUT_SHEET_ID:
         raise Exception("OUTPUT_SHEET_ID environment variable is not set.")
     season_key = season or CURRENT_SEASON
-    sheet_name = f"出力結果_{season_key}"
-    worksheet = client.open_by_key(SPREADSHEET_ID).worksheet(sheet_name)
-    records = get_sheet_records_with_empty_safe(worksheet, head_row=2)
-    save_output_cache(season_key, records)
-    return records
+
+    # 一般DBの「転送」シートID（＝同じファイル内 or 環境変数で取得可）
+    GENERAL_TRANSFER_SHEET_ID = os.environ.get("GENERAL_TRANSFER_SHEET_ID") \
+        or LIMITED_OUTPUT_SHEET_ID  # デフォは同一ファイル
+
+    # 1. 限定データ
+    limited_sheet_name = f"出力結果_{season_key}"
+    limited_ws = client.open_by_key(LIMITED_OUTPUT_SHEET_ID).worksheet(limited_sheet_name)
+    limited_records = get_sheet_records_with_empty_safe(limited_ws, head_row=2)
+    for row in limited_records:
+        row["source"] = "限定"
+
+    # 2. 一般版から転送
+    try:
+        general_ws = client.open_by_key(GENERAL_TRANSFER_SHEET_ID).worksheet("一般版から転送")
+        general_records = get_sheet_records_with_empty_safe(general_ws, head_row=2)
+        for row in general_records:
+            row["source"] = "一般"
+    except Exception as e:
+        print(f"一般版から転送シートの取得失敗: {e}")
+        general_records = []
+
+    # 3. 日付順に結合（新しい順）へ
+    def parse_datetime(row):
+        import datetime
+        v = row.get("日付", "")
+        try:
+            return datetime.datetime.strptime(v, "%Y-%m-%d %H:%M:%S")
+        except Exception:
+            return datetime.datetime.min
+
+    all_data = limited_records + general_records
+    all_data.sort(key=parse_datetime, reverse=True)
+
+    save_output_cache(season_key, all_data)
+    return all_data
 
 def get_output_sheet_cache(season=None):
-    """
-    指定シーズンのキャッシュをロード（なければ生成）
-    """
     season_key = season or CURRENT_SEASON
     data = load_output_cache(season_key)
     if not data:
@@ -86,9 +113,6 @@ def get_output_sheet_cache(season=None):
     return data
 
 def fetch_latest_output_row_as_dict(season=None):
-    """
-    指定シーズンの「出力結果_シーズン名」シートの3行目（最新追加行）をdictで返す
-    """
     SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
     creds_path = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
     if not creds_path:
@@ -104,7 +128,6 @@ def fetch_latest_output_row_as_dict(season=None):
     headers = worksheet.row_values(2)    # 2行目がヘッダー
     latest_row = worksheet.row_values(3) # 3行目が最新データ
 
-    # === 重複ヘッダー対応 ===
     seen = {}
     uniq_headers = []
     for h in headers:
@@ -122,9 +145,6 @@ def fetch_latest_output_row_as_dict(season=None):
     return row_dict
 
 def append_battlelog_row_from_api(row_dict, season=None, source="一般"):
-    """
-    API経由などで受信した「出力結果」データを指定シーズンのキャッシュに追加
-    """
     season_key = season or CURRENT_SEASON
     data = get_output_sheet_cache(season_key)
     row_dict["source"] = source
@@ -164,8 +184,27 @@ def _update_striker_cache():
         for row in records:
             name = row.get("キャラ名")
             icon_url = row.get("アイコン")
+            try:
+                # 射程は整数型に変換。異常値はスキップ
+                s_range = int(row.get("射程", 0) or 0)
+                if s_range not in (350, 450, 550, 650, 750, 850):
+                    raise ValueError
+            except Exception:
+                print(f"[STRIKER] キャラ「{name}」の射程データ異常、スキップ")
+                continue
+            shield_raw = row.get("遮蔽", "")
+            # TRUE/FALSE（str, boolどちらでも対応）に変換
+            if isinstance(shield_raw, bool):
+                shield = shield_raw
+            else:
+                shield = str(shield_raw).strip().upper() == "TRUE"
             if name and icon_url:
-                char_list.append({"name": name, "image": icon_url})
+                char_list.append({
+                    "name": name,
+                    "image": icon_url,
+                    "射程": s_range,
+                    "遮蔽": shield,
+                })
         _striker_cache = {
             "data": char_list,
             "timestamp": time.time()
@@ -217,11 +256,9 @@ def get_special_list_from_sheet():
         _update_special_cache()
     return _special_cache["data"] or []
 
-# サーバー起動時に初回キャッシュ取得
 _update_striker_cache()
 _update_special_cache()
 
-# バックグラウンドで6時間ごとに自動更新
 def char_cache_scheduler():
     while True:
         time.sleep(_CHAR_CACHE_LIFETIME)
@@ -297,12 +334,12 @@ def normalize(s):
 
 # ========== キャッシュ参照での検索 ==========
 
-def search_battlelog_output_sheet(query, search_side, season=None):
-    """
-    指定シーズンのキャッシュを参照して検索（side, seasonどちらも必須）
-    """
+def search_battlelog_output_sheet(query, search_side, season=None, only_limited=False):
     cache = get_output_sheet_cache(season)
     all_records_main = cache or []
+
+    if only_limited:
+        all_records_main = [r for r in all_records_main if r.get("source") == "限定"]
 
     if search_side == "attack":
         char_cols = ["A1", "A2", "A3", "A4", "ASP1", "ASP2"]
@@ -335,16 +372,11 @@ def search_battlelog_output_sheet(query, search_side, season=None):
 # ▼▼▼ ここから新規追加 ▼▼▼
 # =========================
 
-def get_latest_loser_teams(n=5, season=None):
-    """
-    指定シーズンのキャッシュから最新n件分の「負けた側」編成（攻防・アイコン・日付付き）を返す
-    """
-    # キャラ画像リストもここでまとめて作成
+def get_latest_loser_teams(n=5, season=None, only_limited=False):
     striker_list = get_striker_list_from_sheet()
     special_list = get_special_list_from_sheet()
     char_image_map = {c["name"]: c["image"] for c in striker_list + special_list}
 
-    # アイコン取得
     side_icon_map = {
         "attack": get_other_icon("攻撃側"),
         "defense": get_other_icon("防衛側"),
@@ -352,12 +384,13 @@ def get_latest_loser_teams(n=5, season=None):
     lose_icon = get_other_icon("負け")
 
     logs = get_output_sheet_cache(season) or []
+    if only_limited:
+        logs = [row for row in logs if row.get("source") == "限定"]
     result = []
 
     for row in logs:
         team = None
         side = None
-        # 負け側判定
         if row.get("勝敗", "") == "Lose":
             side = "attack"
             chars = [row.get(f"A{i+1}", "") for i in range(4)] + [row.get("ASP1", ""), row.get("ASP2", "")]
@@ -365,7 +398,6 @@ def get_latest_loser_teams(n=5, season=None):
             side = "defense"
             chars = [row.get(f"D{i+1}", "") for i in range(4)] + [row.get("DSP1", ""), row.get("DSP2", "")]
         if side:
-            # キャラ画像セット
             char_objs = []
             for name in chars:
                 char_objs.append({
@@ -378,6 +410,7 @@ def get_latest_loser_teams(n=5, season=None):
                 "lose_icon": lose_icon,
                 "characters": char_objs,
                 "date": row.get("日付", ""),
+                "source": row.get("source", ""),
             }
             result.append(team)
         if len(result) >= n:

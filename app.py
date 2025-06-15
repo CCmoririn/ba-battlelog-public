@@ -16,27 +16,25 @@ from spreadsheet_manager import (
     load_other_icon_cache,
     append_battlelog_row_from_api,
     fetch_latest_output_row_as_dict,
-    get_latest_loser_teams  # ★ここ追加
+    get_latest_loser_teams
 )
 from config import CURRENT_SEASON, SEASON_LIST
+
+from defense_suggester import suggest_defense_teams, suggest_team_for_template
 
 LIMITED_SERVER_URL = os.environ.get("LIMITED_SERVER_URL")
 
 app = Flask(__name__)
 
-# ▼▼▼ ここからリダイレクト追加部分 ▼▼▼
 NEW_DOMAIN = "bluearchive-battlelog-p.com"  # 新ドメイン名のみ
 
 @app.before_request
 def redirect_to_custom_domain():
-    # onrender.comでアクセスされた場合は新ドメインへリダイレクト（301）
     if "onrender.com" in request.host:
         new_url = request.url.replace(request.host, NEW_DOMAIN)
-        # httpsに強制
         if not new_url.startswith("https://"):
             new_url = "https://" + new_url.split("://", 1)[-1]
         return redirect(new_url, code=301)
-# ▲▲▲ ここまで追加 ▲▲▲
 
 if not os.environ.get("GOOGLE_APPLICATION_CREDENTIALS"):
     print("GOOGLE_APPLICATION_CREDENTIALS not found in environment variables.")
@@ -73,7 +71,6 @@ def send_to_limited_server(row_dict):
 
 @app.route("/", methods=["GET"])
 def index():
-    # ★ 直近アップロード（負け側5件）を取得
     loser_teams = get_latest_loser_teams(5)
     return render_template(
         "index.html",
@@ -82,7 +79,6 @@ def index():
         loser_teams=loser_teams
     )
 
-# ▼ 追加：アップロードファイルを返すエンドポイント
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
     uploads_dir = os.path.abspath("uploads")
@@ -101,7 +97,6 @@ def upload():
     file.save(file_path)
     try:
         from main import process_image
-        # シーズン名はクエリまたはフォームから取得（なければ現行シーズン）
         season = request.form.get("season", CURRENT_SEASON)
         row_data = process_image(file_path, season=season)
         labels = [
@@ -112,7 +107,6 @@ def upload():
             "防衛キャラ1", "防衛キャラ2", "防衛キャラ3",
             "防衛キャラ4", "防衛キャラ5", "防衛キャラ6"
         ]
-        # ▼ ここでプレビュー用のURLを組み立ててテンプレートに渡す
         preview_image_url = f"/uploads/{file.filename}"
         return render_template(
             "confirm.html",
@@ -120,7 +114,7 @@ def upload():
             labels=labels,
             SEASON_LIST=SEASON_LIST,
             CURRENT_SEASON=season,
-            preview_image_url=preview_image_url  # ← 追加
+            preview_image_url=preview_image_url
         )
     except Exception as e:
         print(f"render_template失敗: {e}")
@@ -138,7 +132,6 @@ def upload_confirm():
             for i in range(18)
         ]
         row_data = [unicodedata.normalize("NFKC", v) for v in row_data]
-        # シーズン名はフォームから取得（なければ現行シーズン）
         season = request.form.get("season", CURRENT_SEASON)
         update_spreadsheet(row_data, season=season)
 
@@ -186,15 +179,14 @@ def search():
         print(f"キャラリスト取得エラー: {e}")
         striker_list = []
         special_list = []
-    loser_teams = get_latest_loser_teams(5)  # ★追加！
-    # シーズンリストもテンプレートへ
+    loser_teams = get_latest_loser_teams(5)
     return render_template("db.html",
         striker_list=striker_list,
         special_list=special_list,
         SEASON_LIST=SEASON_LIST,
         CURRENT_SEASON=CURRENT_SEASON,
         request=request,
-        loser_teams=loser_teams  # ★追加！
+        loser_teams=loser_teams
     )
 
 @app.route("/api/search", methods=["POST"])
@@ -302,11 +294,75 @@ def api_search():
         print(f"/api/search エラー: {e}")
         return jsonify({"error": str(e)}), 500
 
-# ▼▼▼ privacy.htmlを表示するルートを追加 ▼▼▼
+# ▼▼▼ 防衛編成メーカー ▼▼▼
+@app.route("/defense_suggest", methods=["GET", "POST"])
+def defense_suggest():
+    message = None
+    result = None
+    season = request.form.get("season", CURRENT_SEASON)
+    striker_list = get_striker_list_from_sheet()
+    special_list = get_special_list_from_sheet()
+    attack_teams = [[None for _ in range(6)] for _ in range(5)]
+    strict_pos = bool(request.form.get("strict_pos")) if request.method == "POST" else False
+
+    if request.method == "POST":
+        # ★ここでprintでデバッグ！
+        for i in range(5):
+            print([request.form.get(f"attack_{i}_{j}", "") for j in range(6)])
+        try:
+            attacks = []
+            for i in range(5):
+                chars = []
+                for j in range(6):
+                    char_name = request.form.get(f"attack_{i}_{j}", "").strip()
+                    chars.append(char_name)
+                if any(chars):
+                    attacks.append(chars)
+                attack_teams[i] = [
+                    next((c for c in striker_list if c["name"] == chars[j]), None) if j < 4 else
+                    next((c for c in special_list if c["name"] == chars[j]), None)
+                    if chars[j] else None
+                    for j in range(6)
+                ]
+            if not attacks:
+                attacks = [["", "", "", "", "", ""]]
+            result = suggest_defense_teams(attacks, season=season, strict_pos=strict_pos)
+        except Exception as e:
+            message = f"提案ロジック実行時にエラーが発生しました: {e}"
+    else:
+        attack_teams = [[None for _ in range(6)] for _ in range(5)]
+    return render_template(
+        "defense_suggest.html",
+        striker_list=striker_list,
+        special_list=special_list,
+        SEASON_LIST=SEASON_LIST,
+        CURRENT_SEASON=season,
+        message=message,
+        result=result,
+        strict_pos=strict_pos,
+        attack_teams=attack_teams
+    )
+
+# ▼▼▼ テンプレ決定過程テーブルAPI ▼▼▼
+@app.route("/api/template_detail", methods=["POST"])
+def api_template_detail():
+    try:
+        data = request.json
+        template_tags = data.get("template_tags")
+        attacks = data.get("attacks")
+        season = data.get("season", CURRENT_SEASON)
+        strict_pos = bool(data.get("strict_pos"))
+        if not attacks or not any(any(x) for x in attacks):
+            attacks = [["", "", "", "", "", ""]]
+        res = suggest_team_for_template(template_tags, attacks=attacks, season=season, strict_pos=strict_pos)
+        return jsonify(res)
+    except Exception as e:
+        print(f"/api/template_detail エラー: {e}")
+        return jsonify({"error": str(e)}), 500
+
 @app.route("/privacy.html")
 def privacy():
     return render_template("privacy.html")
-# ▲▲▲ ここまで ▲▲▲
 
 @app.route('/guide')
 def guide():
@@ -320,7 +376,6 @@ def tips():
 def tips_character_growth():
     return render_template('character-growth.html')
 
-# ========== お問い合わせページ ==========
 @app.route("/contact.html")
 def contact():
     return render_template("contact.html")
