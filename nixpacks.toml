@@ -1,6 +1,10 @@
 [phases.setup]
 nixPkgs = [
   "python311",
+  "mesa",
   "libGL",
   "xorg.libX11"
 ]
+
+[phases.install]
+env = { LD_LIBRARY_PATH = "/run/opengl-driver/lib:${LD_LIBRARY_PATH}" }
