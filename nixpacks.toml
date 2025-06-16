@@ -1,5 +1,5 @@
 [phases.setup]
 nixPkgs = [
-  "libgl",
-  "libx11"
+  "libGL",
+  "xorg.libX11"
 ]
