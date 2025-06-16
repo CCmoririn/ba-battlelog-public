@@ -7,14 +7,23 @@ import json
 
 from config import CURRENT_SEASON, SEASON_LIST, CACHE_DIR
 
+# ========== Google認証を環境変数JSON優先で取得 ==========
+
+def get_google_credentials(scopes):
+    creds_json = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS_JSON")
+    if creds_json:
+        creds_dict = json.loads(creds_json)
+        return Credentials.from_service_account_info(creds_dict, scopes=scopes)
+    creds_path = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
+    if creds_path and os.path.exists(creds_path):
+        return Credentials.from_service_account_file(creds_path, scopes=scopes)
+    raise Exception("Google認証情報が見つかりません（環境変数もファイルもなし）")
+
 # ========== アップロード時スプレッドシート追加 ==========
 
 def update_spreadsheet(data, season=None):
     SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
-    creds_path = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
-    if not creds_path:
-        raise Exception("GOOGLE_APPLICATION_CREDENTIALS environment variable is not set.")
-    creds = Credentials.from_service_account_file(creds_path, scopes=SCOPES)
+    creds = get_google_credentials(SCOPES)
     client = gspread.authorize(creds)
     SPREADSHEET_ID = os.environ.get("BATTLELOG_SHEET_ID")
     if not SPREADSHEET_ID:
@@ -56,10 +65,7 @@ def refresh_output_sheet_cache(season=None):
     source="限定"/"一般"を付けてマージ、日付順でまとめてキャッシュ保存
     """
     SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
-    creds_path = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
-    if not creds_path:
-        raise Exception("GOOGLE_APPLICATION_CREDENTIALS environment variable is not set.")
-    creds = Credentials.from_service_account_file(creds_path, scopes=SCOPES)
+    creds = get_google_credentials(SCOPES)
     client = gspread.authorize(creds)
 
     # 限定DBのスプレッドシートID
@@ -114,10 +120,7 @@ def get_output_sheet_cache(season=None):
 
 def fetch_latest_output_row_as_dict(season=None):
     SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
-    creds_path = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
-    if not creds_path:
-        raise Exception("GOOGLE_APPLICATION_CREDENTIALS environment variable is not set.")
-    creds = Credentials.from_service_account_file(creds_path, scopes=SCOPES)
+    creds = get_google_credentials(SCOPES)
     client = gspread.authorize(creds)
     SPREADSHEET_ID = os.environ.get("OUTPUT_SHEET_ID")
     if not SPREADSHEET_ID:
@@ -170,10 +173,7 @@ def _update_striker_cache():
     try:
         print("STRIKERキャッシュを更新します...")
         SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
-        creds_path = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
-        if not creds_path:
-            raise Exception("GOOGLE_APPLICATION_CREDENTIALS environment variable is not set.")
-        creds = Credentials.from_service_account_file(creds_path, scopes=SCOPES)
+        creds = get_google_credentials(SCOPES)
         client = gspread.authorize(creds)
         SPREADSHEET_ID = os.environ.get("CHARDATA_SHEET_ID")
         if not SPREADSHEET_ID:
@@ -218,10 +218,7 @@ def _update_special_cache():
     try:
         print("SPECIALキャッシュを更新します...")
         SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
-        creds_path = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
-        if not creds_path:
-            raise Exception("GOOGLE_APPLICATION_CREDENTIALS environment variable is not set.")
-        creds = Credentials.from_service_account_file(creds_path, scopes=SCOPES)
+        creds = get_google_credentials(SCOPES)
         client = gspread.authorize(creds)
         SPREADSHEET_ID = os.environ.get("CHARDATA_SHEET_ID")
         if not SPREADSHEET_ID:
@@ -276,10 +273,7 @@ _other_icon_cache = {}
 def load_other_icon_cache():
     global _other_icon_cache
     SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
-    creds_path = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
-    if not creds_path:
-        raise Exception("GOOGLE_APPLICATION_CREDENTIALS environment variable is not set.")
-    creds = Credentials.from_service_account_file(creds_path, scopes=SCOPES)
+    creds = get_google_credentials(SCOPES)
     client = gspread.authorize(creds)
     ws = client.open_by_key(_OTHER_ICON_SPREADSHEET_ID).worksheet(_OTHER_ICON_SHEET)
     records = ws.get_all_records()
