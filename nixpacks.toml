@@ -1,12 +1,11 @@
 [phases.setup]
 nixPkgs = [
-  "libGL",
-  "libGLU",
+  "libgl",
+  "libglu",
   "mesa",
-  "libX11",
-  "libXext",
-  "libXrender",
-  "libSM",
-  "libICE"
+  "libx11",
+  "libxext",
+  "libxrender",
+  "libsm",
+  "libice"
 ]
-
